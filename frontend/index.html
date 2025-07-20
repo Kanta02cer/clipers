@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube盛り上がり分析ツール (Enhanced)</title>
+    <title>YouTube盛り上がり分析ツール (Gemini Enhanced)</title>
     <style>
         * {
             margin: 0;
@@ -28,7 +28,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
             color: white;
             padding: 30px;
             text-align: center;
@@ -140,8 +140,8 @@
         }
 
         .option-card.selected {
-            border-color: #667eea;
-            background: #f8f9ff;
+            border-color: #43e97b;
+            background: #f0fff8;
         }
 
         .option-card h3 {
@@ -199,6 +199,75 @@
             background: #28a745;
         }
 
+        /* 分析ステップのスタイル */
+        .analysis-steps {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .analysis-step {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #e9ecef;
+        }
+        
+        .analysis-step.processing {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        
+        .analysis-step.completed {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .analysis-step.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .step-title {
+            font-weight: bold;
+            flex: 1;
+        }
+        
+        .step-status {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+        
+        .step-description {
+            color: #666;
+            font-size: 14px;
+            margin-left: 34px;
+        }
+
         .status-error {
             background: #dc3545;
         }
@@ -247,6 +316,33 @@
             margin-bottom: 15px;
             font-size: 1.3em;
         }
+        
+        .gemini-result-card {
+            border-left: 5px solid #43e97b;
+        }
+
+        .gemini-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .gemini-item {
+            background: #f0fff8;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .gemini-item h4 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+        
+        .gemini-item .score {
+            font-size: 2em;
+            font-weight: bold;
+            color: #20c997;
+        }
 
         .stats-grid {
             display: grid;
@@ -274,57 +370,6 @@
             margin-top: 5px;
         }
 
-        .chart-container {
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        .chart-container img {
-            max-width: 100%;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .excitement-points {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .excitement-points h4 {
-            color: #856404;
-            margin-bottom: 15px;
-        }
-
-        .point-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-        }
-
-        .point-item {
-            background: white;
-            padding: 10px;
-            border-radius: 8px;
-            border-left: 3px solid #ffc107;
-            font-size: 0.9em;
-        }
-
-        .engagement-section {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .engagement-section h4 {
-            color: #0c5460;
-            margin-bottom: 15px;
-        }
-
         .hot-timestamps {
             background: #f8d7da;
             border: 1px solid #f5c6cb;
@@ -345,136 +390,7 @@
             margin-bottom: 10px;
             border-left: 3px solid #dc3545;
         }
-
-        .pillar-item {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
-        }
-
-        .pillar-item h4 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-
-        .pillar-details {
-            margin-bottom: 15px;
-        }
-
-        .detail-item {
-            padding: 5px 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .detail-item:last-child {
-            border-bottom: none;
-        }
-
-        .pillar-recommendations {
-            background: #fff3cd;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #ffeaa7;
-        }
-
-        .pillar-recommendations ul {
-            margin: 10px 0 0 0;
-            padding-left: 20px;
-        }
-
-        .strategic-recommendations {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .strategic-recommendations h4 {
-            color: #0c5460;
-            margin-bottom: 15px;
-        }
-
-        .strategic-recommendations ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .strategic-recommendations li {
-            padding: 8px 0;
-            border-bottom: 1px solid #bee5eb;
-        }
-
-        .strategic-recommendations li:last-child {
-            border-bottom: none;
-        }
-
-        .platform-optimization {
-            background: #e8f5e8;
-            border: 1px solid #c3e6c3;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .platform-optimization h4 {
-            color: #155724;
-            margin-bottom: 15px;
-        }
-
-        .platform-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .platform-item {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #c3e6c3;
-        }
-
-        .platform-item h5 {
-            color: #155724;
-            margin-bottom: 10px;
-        }
-
-        .platform-item ul {
-            margin: 10px 0 0 0;
-            padding-left: 20px;
-        }
-
-        .recommendations {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .recommendations h4 {
-            color: #0c5460;
-            margin-bottom: 15px;
-        }
-
-        .recommendations ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .recommendations li {
-            padding: 8px 0;
-            border-bottom: 1px solid #bee5eb;
-        }
-
-        .recommendations li:last-child {
-            border-bottom: none;
-        }
-
+        
         .error {
             background: #f8d7da;
             border: 1px solid #f5c6cb;
@@ -484,89 +400,27 @@
             margin: 20px 0;
         }
 
-        .info-box {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
-            color: #0c5460;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-        }
-
-        .help-section {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .help-section h4 {
-            color: #856404;
-            margin-bottom: 15px;
-        }
-
-        .help-section a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .help-section a:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 768px) {
-            .input-group {
-                flex-direction: column;
-            }
-            
-            .input-group input {
-                min-width: auto;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .point-list {
-                grid-template-columns: 1fr;
-            }
-            
-            .analysis-options {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎵 YouTube盛り上がり分析ツール</h1>
-            <p>正確なdB測定 + エンゲージメント分析で、動画の盛り上がりポイントを特定</p>
-            <div class="version-badge">Enhanced v2.0.0</div>
+            <h1>✨ YouTube盛り上がり分析ツール</h1>
+            <p>Gemini AIによる質的分析で、動画のポテンシャルを最大限に引き出す</p>
+            <div class="version-badge">v2.1.0-gemini</div>
         </div>
 
         <div class="main-content">
             <div class="input-section">
-                <h2>YouTube動画URLを入力</h2>
+                <h2>分析したいYouTube動画のURLを入力</h2>
                 <div class="input-group">
                     <input type="url" id="videoUrl" placeholder="https://www.youtube.com/watch?v=..." />
-                    <input type="text" id="apiKey" placeholder="YouTube API Key (オプション)" />
                 </div>
                 
                 <div class="analysis-options">
-                    <div class="option-card" onclick="selectAnalysis('basic')">
-                        <h3>🎵 基本音声分析</h3>
-                        <p>従来の音声分析機能</p>
-                    </div>
-                    <div class="option-card" onclick="selectAnalysis('accurate')">
-                        <h3>🎵 正確な音声分析</h3>
-                        <p>正確なdB測定による音声分析</p>
-                    </div>
-                    <div class="option-card" onclick="selectAnalysis('engagement')">
-                        <h3>📊 エンゲージメント分析</h3>
-                        <p>いいね・コメント・視聴回数分析</p>
+                    <div class="option-card" onclick="selectAnalysis('gemini')">
+                        <h3>✨ Gemini AI 拡張分析 (推奨)</h3>
+                        <p>AIによる質的分析と戦略的提案</p>
                     </div>
                     <div class="option-card" onclick="selectAnalysis('comprehensive')">
                         <h3>🚀 包括的分析</h3>
@@ -584,35 +438,26 @@
             </div>
 
             <div class="api-key-section">
-                <h4>🔑 YouTube API Key設定</h4>
-                <input type="text" id="apiKeyInput" class="api-key-input" placeholder="ここにAPIキーを入力してください">
-                <div class="api-key-status" id="apiKeyStatus">
-                    <span class="status-indicator status-warning"></span>
-                    <span>APIキーが設定されていません</span>
-                </div>
-                <button class="btn btn-secondary" onclick="testApiKey()">APIキーをテスト</button>
-                <button class="btn btn-success" onclick="saveApiKey()">APIキーを保存</button>
+                <h4>🔑 API Key設定</h4>
+                <p>分析にはYouTube Data API v3とGemini APIのキーが必要です。</p>
+                <input type="password" id="youtubeApiKeyInput" class="api-key-input" placeholder="ここにYouTube APIキーを入力">
+                <input type="password" id="geminiApiKeyInput" class="api-key-input" placeholder="ここにGemini APIキーを入力">
+                <button class="btn btn-success" onclick="saveApiKeys()">APIキーを保存</button>
+                <p style="font-size: 0.8em; margin-top: 10px;">APIキーはブラウザのローカルストレージに保存されます。</p>
             </div>
 
-            <div class="info-box">
-                <h4>💡 新機能について</h4>
-                <ul>
-                    <li><strong>正確なdB測定:</strong> 標準的な音声レベルに基づく正確なdB値</li>
-                    <li><strong>エンゲージメント分析:</strong> YouTube APIを使用したいいね・コメント分析</li>
-                    <li><strong>ホットタイムスタンプ:</strong> コメントから盛り上がり箇所を特定</li>
-                    <li><strong>包括的スコア:</strong> 音声とエンゲージメントを統合した総合スコア</li>
-                </ul>
-            </div>
-
-            <div class="help-section">
-                <h4>❓ ヘルプ</h4>
-                <p>YouTube API Keyが必要な機能を使用するには、<a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>でAPIキーを取得してください。</p>
-                <p>詳細な設定方法は<a href="docs/youtube_api_setup_guide.md" target="_blank">設定ガイド</a>をご覧ください。</p>
-            </div>
 
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>動画を分析中です... しばらくお待ちください</p>
+                <p>動画を分析中です... Geminiが思考を巡らせています。しばらくお待ちください。</p>
+            </div>
+
+            <!-- 分析ステップ表示セクション -->
+            <div class="analysis-steps" id="analysisSteps" style="display: none;">
+                <h3>🔍 AI分析プロセス</h3>
+                <div class="steps-container" id="stepsContainer">
+                    <!-- ステップが動的に追加される -->
+                </div>
             </div>
 
             <div class="results" id="results">
@@ -622,17 +467,12 @@
     </div>
 
     <script>
-        let selectedAnalysis = 'comprehensive';
-        let savedApiKey = localStorage.getItem('youtube_api_key') || '';
+        let selectedAnalysis = 'gemini';
 
         // ページ読み込み時の初期化
         window.addEventListener('load', function() {
-            // 保存されたAPIキーを復元
-            if (savedApiKey) {
-                document.getElementById('apiKeyInput').value = savedApiKey;
-                document.getElementById('apiKey').value = savedApiKey;
-                updateApiKeyStatus('success', 'APIキーが保存されています');
-            }
+            document.getElementById('youtubeApiKeyInput').value = localStorage.getItem('youtube_api_key') || '';
+            document.getElementById('geminiApiKeyInput').value = localStorage.getItem('gemini_api_key') || '';
             
             // 初期選択
             document.querySelector('.option-card').classList.add('selected');
@@ -640,117 +480,76 @@
 
         function selectAnalysis(type) {
             selectedAnalysis = type;
-            
-            // 選択状態を更新
-            document.querySelectorAll('.option-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            
+            document.querySelectorAll('.option-card').forEach(card => card.classList.remove('selected'));
             event.currentTarget.classList.add('selected');
         }
 
-        function testApiKey() {
-            const apiKey = document.getElementById('apiKeyInput').value.trim();
+        function saveApiKeys() {
+            const youtubeApiKey = document.getElementById('youtubeApiKeyInput').value.trim();
+            const geminiApiKey = document.getElementById('geminiApiKeyInput').value.trim();
             
-            if (!apiKey) {
-                updateApiKeyStatus('error', 'APIキーを入力してください');
-                return;
+            if (youtubeApiKey) {
+                localStorage.setItem('youtube_api_key', youtubeApiKey);
             }
-            
-            // APIキーの形式チェック
-            if (apiKey.length < 30) {
-                updateApiKeyStatus('error', 'APIキーの形式が正しくありません');
-                return;
+            if (geminiApiKey) {
+                localStorage.setItem('gemini_api_key', geminiApiKey);
             }
-            
-            updateApiKeyStatus('success', 'APIキーの形式は正しいようです');
-        }
-
-        function saveApiKey() {
-            const apiKey = document.getElementById('apiKeyInput').value.trim();
-            
-            if (!apiKey) {
-                updateApiKeyStatus('error', 'APIキーを入力してください');
-                return;
-            }
-            
-            // ローカルストレージに保存
-            localStorage.setItem('youtube_api_key', apiKey);
-            savedApiKey = apiKey;
-            
-            // メイン入力フィールドにも反映
-            document.getElementById('apiKey').value = apiKey;
-            
-            updateApiKeyStatus('success', 'APIキーが保存されました');
-        }
-
-        function updateApiKeyStatus(type, message) {
-            const statusDiv = document.getElementById('apiKeyStatus');
-            const indicator = statusDiv.querySelector('.status-indicator');
-            
-            // クラスを更新
-            indicator.className = `status-indicator status-${type}`;
-            statusDiv.querySelector('span:last-child').textContent = message;
+            alert('APIキーを保存しました。');
         }
 
         async function analyzeVideo() {
             const videoUrl = document.getElementById('videoUrl').value.trim();
-            const apiKey = document.getElementById('apiKey').value.trim();
+            const youtubeApiKey = localStorage.getItem('youtube_api_key') || '';
+            const geminiApiKey = localStorage.getItem('gemini_api_key') || '';
             
             if (!videoUrl) {
                 alert('YouTube動画のURLを入力してください');
                 return;
             }
 
-            if (!videoUrl.includes('youtube.com') && !videoUrl.includes('youtu.be')) {
-                alert('有効なYouTube動画のURLを入力してください');
+            if ((selectedAnalysis === 'comprehensive' || selectedAnalysis === 'framework' || selectedAnalysis === 'gemini') && !youtubeApiKey) {
+                alert('YouTube APIキーを設定してください。');
                 return;
             }
 
-            // ローディング表示
+            if (selectedAnalysis === 'gemini' && !geminiApiKey) {
+                alert('Gemini APIキーを設定してください。');
+                return;
+            }
+
             document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').innerHTML = '';
             document.getElementById('results').style.display = 'none';
 
             try {
                 let endpoint = '';
                 let data = {
                     url: videoUrl,
-                    download_audio: true
+                    youtube_api_key: youtubeApiKey,
+                    gemini_api_key: geminiApiKey,
                 };
 
-                // 分析タイプに応じてエンドポイントを選択
                 switch (selectedAnalysis) {
-                    case 'basic':
-                        endpoint = '/analyze-with-visualization';
-                        break;
-                    case 'accurate':
-                        endpoint = '/analyze-audio-accurate';
-                        break;
-                    case 'engagement':
-                        endpoint = '/analyze-engagement';
-                        data.download_audio = false;
-                        if (apiKey) data.youtube_api_key = apiKey;
-                        break;
                     case 'comprehensive':
                         endpoint = '/analyze-comprehensive';
-                        if (apiKey) data.youtube_api_key = apiKey;
                         break;
                     case 'framework':
                         endpoint = '/evaluate-video-framework';
-                        if (apiKey) data.youtube_api_key = apiKey;
+                        break;
+                    case 'gemini':
+                        endpoint = '/analyze-gemini-enhanced';
                         break;
                 }
 
                 const response = await fetch(`http://localhost:8000${endpoint}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorData.detail}`);
                 }
 
                 const result = await response.json();
@@ -758,541 +557,149 @@
 
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('results').innerHTML = `
-                    <div class="error">
-                        <h3>エラーが発生しました</h3>
-                        <p>${error.message}</p>
-                        <p>サーバーが起動しているか確認してください。</p>
-                    </div>
-                `;
-                document.getElementById('results').style.display = 'block';
+                document.getElementById('results').innerHTML = `<div class="error"><h3>エラーが発生しました</h3><p>${error.message}</p><p>APIキーやサーバーの起動状態を確認してください。</p></div>`;
             } finally {
                 document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
             }
         }
 
         function displayResults(result, analysisType) {
-            const resultsDiv = document.getElementById('results');
             let html = '';
-
-            if (analysisType === 'basic') {
-                html = displayBasicAnalysis(result);
-            } else if (analysisType === 'accurate') {
-                html = displayAccurateAnalysis(result);
-            } else if (analysisType === 'engagement') {
-                html = displayEngagementAnalysis(result);
-            } else if (analysisType === 'comprehensive') {
-                html = displayComprehensiveAnalysis(result);
-            } else if (analysisType === 'framework') {
-                html = displayFrameworkAnalysis(result);
+            if (analysisType === 'gemini') {
+                html = displayGeminiAnalysis(result);
+            } else {
+                // 他の分析結果の表示関数をここに実装
+                html = `<div class="result-card"><h3>${analysisType} 分析結果</h3><pre>${JSON.stringify(result, null, 2)}</pre></div>`;
             }
-
-            resultsDiv.innerHTML = html;
-            resultsDiv.style.display = 'block';
+            document.getElementById('results').innerHTML = html;
         }
 
-        function displayBasicAnalysis(result) {
+        // 分析ステップの表示関数
+        function displayAnalysisSteps(steps) {
+            const container = document.getElementById('stepsContainer');
+            container.innerHTML = '';
+            
+            steps.forEach(step => {
+                const stepElement = document.createElement('div');
+                stepElement.className = `analysis-step ${step.status}`;
+                stepElement.innerHTML = `
+                    <div class="step-header">
+                        <span class="step-number">${step.step}</span>
+                        <span class="step-title">${step.title}</span>
+                        <span class="step-status ${step.status}">${getStatusText(step.status)}</span>
+                    </div>
+                    <div class="step-description">${step.description}</div>
+                `;
+                container.appendChild(stepElement);
+            });
+            
+            document.getElementById('analysisSteps').style.display = 'block';
+        }
+        
+        function getStatusText(status) {
+            switch(status) {
+                case 'processing': return '🔄 処理中';
+                case 'completed': return '✅ 完了';
+                case 'error': return '❌ エラー';
+                default: return '⏳ 待機中';
+            }
+        }
+
+        function displayGeminiAnalysis(result) {
             const videoInfo = result.video_info;
-            const audioAnalysis = result.audio_analysis;
-            const report = result.report;
-            const visualization = result.visualization;
+            const geminiAnalysis = result.gemini_enhanced_analysis;
+            const originalAnalysis = result.original_analysis;
+            const analysisSteps = result.analysis_steps;
 
-            // 安全な数値処理のためのヘルパー関数
-            const safeToFixed = (value, decimals = 1) => {
-                if (value === null || value === undefined || isNaN(value)) return '0.0';
-                return Number(value).toFixed(decimals);
-            };
+            // 分析ステップを表示
+            if (analysisSteps) {
+                displayAnalysisSteps(analysisSteps);
+            }
 
-            const safeDuration = (duration) => {
-                if (duration === null || duration === undefined || isNaN(duration)) return '0.00';
-                return (duration / 60).toFixed(2);
-            };
+            if (geminiAnalysis.error) {
+                return `<div class="error"><h3>Gemini分析エラー</h3><p>${geminiAnalysis.error}</p><pre>${geminiAnalysis.raw_response || ''}</pre></div>`;
+            }
+
+            const safeToFixed = (value, decimals = 1) => (value !== null && value !== undefined && !isNaN(value)) ? Number(value).toFixed(decimals) : 'N/A';
+            const safeDuration = (duration) => (duration !== null && duration !== undefined && !isNaN(duration)) ? (duration / 60).toFixed(2) : 'N/A';
 
             let html = `
                 <div class="result-card">
-                    <h3>📹 動画情報</h3>
-                    <p><strong>タイトル:</strong> ${videoInfo.title}</p>
-                    <p><strong>再生時間:</strong> ${safeDuration(audioAnalysis.duration)}分</p>
-                </div>
-
-                <div class="result-card">
-                    <h3>📊 分析結果</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value">${safeToFixed(audioAnalysis.overall_excitement_score)}</div>
-                            <div class="stat-label">盛り上がりスコア</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${audioAnalysis.excitement_points ? audioAnalysis.excitement_points.length : 0}</div>
-                            <div class="stat-label">盛り上がりポイント数</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${safeToFixed(audioAnalysis.volume_analysis?.mean_volume)} dB</div>
-                            <div class="stat-label">平均音量</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${safeToFixed(audioAnalysis.volume_analysis?.max_volume)} dB</div>
-                            <div class="stat-label">最大音量</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // 盛り上がりポイントを表示
-            if (audioAnalysis.excitement_points && audioAnalysis.excitement_points.length > 0) {
-                html += `
-                    <div class="excitement-points">
-                        <h4>🔥 盛り上がりポイント</h4>
-                        <div class="point-list">
-                `;
-                
-                audioAnalysis.excitement_points.slice(0, 10).forEach((point, index) => {
-                    const typeEmoji = point.type === 'volume' ? '🔊' : '🎵';
-                    html += `
-                        <div class="point-item">
-                            <strong>${index + 1}. ${point.time}秒</strong><br>
-                            ${typeEmoji} 強度: ${safeToFixed(point.intensity, 2)}
-                        </div>
-                    `;
-                });
-                
-                html += `
-                        </div>
-                    </div>
-                `;
-            }
-
-            // 推奨事項を表示
-            if (report && report.recommendations && report.recommendations.length > 0) {
-                html += `
-                    <div class="recommendations">
-                        <h4>💡 分析結果の推奨事項</h4>
-                        <ul>
-                `;
-                
-                report.recommendations.forEach(rec => {
-                    html += `<li>• ${rec}</li>`;
-                });
-                
-                html += `
-                        </ul>
-                    </div>
-                `;
-            }
-
-            // 視覚化チャートを表示
-            if (visualization && visualization.timeline_image && !visualization.timeline_image.startsWith('視覚化エラー')) {
-                html += `
-                    <div class="result-card">
-                        <h3>📈 盛り上がりタイムライン</h3>
-                        <div class="chart-container">
-                            <img src="data:image/png;base64,${visualization.timeline_image}" alt="盛り上がりタイムライン" />
-                        </div>
-                    </div>
-                `;
-            }
-
-            if (visualization && visualization.summary_image && !visualization.summary_image.startsWith('サマリーチャートエラー')) {
-                html += `
-                    <div class="result-card">
-                        <h3>📊 分析サマリー</h3>
-                        <div class="chart-container">
-                            <img src="data:image/png;base64,${visualization.summary_image}" alt="分析サマリー" />
-                        </div>
-                    </div>
-                `;
-            }
-
-            return html;
-        }
-
-        function displayAccurateAnalysis(result) {
-            const videoInfo = result.video_info;
-            const audioAnalysis = result.audio_analysis;
-            const volumeAnalysis = audioAnalysis.volume_analysis;
-
-            // 安全な数値処理のためのヘルパー関数
-            const safeToFixed = (value, decimals = 1) => {
-                if (value === null || value === undefined || isNaN(value)) return '0.0';
-                return Number(value).toFixed(decimals);
-            };
-
-            const safeDuration = (duration) => {
-                if (duration === null || duration === undefined || isNaN(duration)) return '0.00';
-                return (duration / 60).toFixed(2);
-            };
-
-            return `
-                <div class="result-card">
-                    <h3>📹 動画情報</h3>
-                    <p><strong>タイトル:</strong> ${videoInfo.title}</p>
-                    <p><strong>再生時間:</strong> ${safeDuration(audioAnalysis.duration)}分</p>
-                </div>
-
-                <div class="result-card">
-                    <h3>🎵 正確な音声分析</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value">${safeToFixed(audioAnalysis.overall_excitement_score)}</div>
-                            <div class="stat-label">盛り上がりスコア</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${safeToFixed(volumeAnalysis?.mean_volume)} dB</div>
-                            <div class="stat-label">平均音量</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${safeToFixed(volumeAnalysis?.max_volume)} dB</div>
-                            <div class="stat-label">最大音量</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${safeToFixed(volumeAnalysis?.rms_volume, 4)}</div>
-                            <div class="stat-label">RMS音量</div>
-                        </div>
-                    </div>
-                </div>
-
-                ${displayExcitementPoints(audioAnalysis.excitement_points)}
-            `;
-        }
-
-        function displayEngagementAnalysis(result) {
-            const engagementAnalysis = result.engagement_analysis;
-            
-            if ('error' in engagementAnalysis) {
-                return `
-                    <div class="error">
-                        <h3>エンゲージメント分析エラー</h3>
-                        <p>${engagementAnalysis.error}</p>
-                    </div>
-                `;
-            }
-
-            const videoInfo = engagementAnalysis.video_info;
-            const engagementData = engagementAnalysis.engagement_analysis;
-
-            // 安全な数値処理のためのヘルパー関数
-            const safeToFixed = (value, decimals = 1) => {
-                if (value === null || value === undefined || isNaN(value)) return '0.0';
-                return Number(value).toFixed(decimals);
-            };
-
-            const safeDuration = (duration) => {
-                if (duration === null || duration === undefined || isNaN(duration)) return '0.00';
-                return (duration / 60).toFixed(2);
-            };
-
-            const safeNumber = (value) => {
-                if (value === null || value === undefined || isNaN(value)) return 0;
-                return Number(value);
-            };
-
-            return `
-                <div class="result-card">
-                    <h3>📹 動画情報</h3>
-                    <p><strong>タイトル:</strong> ${videoInfo.title}</p>
+                    <h3>📹 動画情報: ${videoInfo.title}</h3>
                     <p><strong>再生時間:</strong> ${safeDuration(videoInfo.duration)}分</p>
                 </div>
 
-                <div class="result-card">
-                    <h3>📊 エンゲージメント分析</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value">${safeToFixed(engagementData.engagement_rate)}%</div>
-                            <div class="stat-label">エンゲージメント率</div>
+                <div class="result-card gemini-result-card">
+                    <h3>✨ Gemini AIによる質的分析サマリー</h3>
+                    <div class="gemini-grid">
+                        <div class="gemini-item">
+                            <h4>📖 物語構造スコア</h4>
+                            <p class="score">${geminiAnalysis.narrative_structure?.score || 'N/A'}/10</p>
+                            <p>${geminiAnalysis.narrative_structure?.reason || ''}</p>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${safeNumber(videoInfo.view_count).toLocaleString()}</div>
-                            <div class="stat-label">視聴回数</div>
+                        <div class="gemini-item">
+                            <h4>❤️ 感情的共感スコア</h4>
+                            <p class="score">${geminiAnalysis.emotional_engagement?.score || 'N/A'}/10</p>
+                            <p>主な感情: <strong>${geminiAnalysis.emotional_engagement?.dominant_emotion || 'N/A'}</strong></p>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${safeNumber(videoInfo.like_count).toLocaleString()}</div>
-                            <div class="stat-label">いいね数</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${safeNumber(videoInfo.comment_count).toLocaleString()}</div>
-                            <div class="stat-label">コメント数</div>
+                        <div class="gemini-item">
+                            <h4>🚀 バイラル性予測スコア</h4>
+                            <p class="score">${geminiAnalysis.virality_prediction?.score || 'N/A'}/10</p>
+                            <p>${geminiAnalysis.virality_prediction?.reason || ''}</p>
                         </div>
                     </div>
                 </div>
-
-                ${displayHotTimestamps(engagementData.hot_timestamps)}
-            `;
-        }
-
-        function displayComprehensiveAnalysis(result) {
-            const videoInfo = result.video_info;
-            const comprehensiveAnalysis = result.comprehensive_analysis;
-            const audioAnalysis = comprehensiveAnalysis.audio_analysis;
-            const engagementAnalysis = comprehensiveAnalysis.engagement_analysis;
-
-            // 安全な数値処理のためのヘルパー関数
-            const safeToFixed = (value, decimals = 1) => {
-                if (value === null || value === undefined || isNaN(value)) return '0.0';
-                return Number(value).toFixed(decimals);
-            };
-
-            const safeDuration = (duration) => {
-                if (duration === null || duration === undefined || isNaN(duration)) return '0.00';
-                return (duration / 60).toFixed(2);
-            };
-
-            let html = `
-                <div class="result-card">
-                    <h3>📹 動画情報</h3>
-                    <p><strong>タイトル:</strong> ${videoInfo.title}</p>
-                    <p><strong>再生時間:</strong> ${safeDuration(audioAnalysis.duration)}分</p>
-                </div>
-
-                <div class="result-card">
-                    <h3>🚀 包括的分析結果</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value">${safeToFixed(comprehensiveAnalysis.comprehensive_score)}</div>
-                            <div class="stat-label">包括的スコア</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${safeToFixed(audioAnalysis.overall_excitement_score)}</div>
-                            <div class="stat-label">音声スコア</div>
-                        </div>
             `;
 
-            if (!('error' in engagementAnalysis)) {
-                const engagementData = engagementAnalysis.engagement_analysis;
+            if (geminiAnalysis.semantic_hotspots && geminiAnalysis.semantic_hotspots.length > 0) {
                 html += `
-                        <div class="stat-item">
-                            <div class="stat-value">${safeToFixed(engagementData.engagement_rate)}%</div>
-                            <div class="stat-label">エンゲージメント率</div>
-                        </div>
-                `;
-            }
-
-            html += `
-                    </div>
-                </div>
-
-                ${displayExcitementPoints(audioAnalysis.excitement_points)}
-            `;
-
-            if (!('error' in engagementAnalysis)) {
-                const engagementData = engagementAnalysis.engagement_analysis;
-                html += displayHotTimestamps(engagementData.hot_timestamps);
-            }
-
-            return html;
-        }
-
-        function displayExcitementPoints(excitementPoints) {
-            if (!excitementPoints || excitementPoints.length === 0) {
-                return '';
-            }
-
-            // 安全な数値処理のためのヘルパー関数
-            const safeToFixed = (value, decimals = 3) => {
-                if (value === null || value === undefined || isNaN(value)) return '0.000';
-                return Number(value).toFixed(decimals);
-            };
-
-            return `
-                <div class="excitement-points">
-                    <h4>🔥 盛り上がりポイント</h4>
-                    <div class="point-list">
-                        ${excitementPoints.slice(0, 10).map((point, index) => {
-                            const typeEmoji = point.type === 'volume' ? '🔊' : '🎵';
-                            const dbInfo = point.db_level ? ` (${safeToFixed(point.db_level, 1)} dB)` : '';
-                            return `
-                                <div class="point-item">
-                                    <strong>${index + 1}. ${point.time}秒</strong><br>
-                                    ${typeEmoji} 強度: ${safeToFixed(point.intensity)}${dbInfo}
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        function displayHotTimestamps(hotTimestamps) {
-            if (!hotTimestamps || hotTimestamps.length === 0) {
-                return '';
-            }
-
-            // 安全な数値処理のためのヘルパー関数
-            const safeToFixed = (value, decimals = 2) => {
-                if (value === null || value === undefined || isNaN(value)) return '0.00';
-                return Number(value).toFixed(decimals);
-            };
-
-            return `
                 <div class="hot-timestamps">
-                    <h4>🔥 ホットタイムスタンプ（コメント分析）</h4>
-                    ${hotTimestamps.slice(0, 5).map((timestamp, index) => `
+                    <h4>🔥 セマンティック・ホットスポット (AI分析)</h4>
+                    ${geminiAnalysis.semantic_hotspots.map((spot, index) => `
                         <div class="timestamp-item">
-                            <strong>${index + 1}. ${timestamp.formatted_time}</strong><br>
-                            📝 言及回数: ${timestamp.mention_count}回<br>
-                            💪 強度: ${safeToFixed(timestamp.intensity)}
+                            <strong>${index + 1}. ${spot.time || 'N/A'}</strong><br>
+                            💡 理由: ${spot.reason || ''}
                         </div>
                     `).join('')}
                 </div>
-            `;
-        }
-
-        function displayFrameworkAnalysis(result) {
-            const videoInfo = result.video_info;
-            const evaluationResult = result.evaluation_result;
-            
-            if ('error' in evaluationResult) {
-                return `
-                    <div class="error">
-                        <h3>動画評価フレームワークエラー</h3>
-                        <p>${evaluationResult.error}</p>
-                    </div>
                 `;
             }
 
-            const viralPotential = evaluationResult.viral_potential;
-            const pillarEvaluations = evaluationResult.pillar_evaluations;
-            const recommendations = evaluationResult.strategic_recommendations;
-            const platformOptimization = evaluationResult.platform_optimization;
-
-            // 安全な数値処理のためのヘルパー関数
-            const safeDuration = (duration) => {
-                if (duration === null || duration === undefined || isNaN(duration)) return '0.00';
-                return (duration / 60).toFixed(2);
-            };
-
-            return `
-                <div class="result-card">
-                    <h3>📹 動画情報</h3>
-                    <p><strong>タイトル:</strong> ${videoInfo.title}</p>
-                    <p><strong>再生時間:</strong> ${safeDuration(videoInfo.duration)}分</p>
-                </div>
-
-                <div class="result-card">
-                    <h3>📊 統合縦型動画最適化フレームワーク評価</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value">${evaluationResult.total_score}/100</div>
-                            <div class="stat-label">総合スコア</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${viralPotential.level}</div>
-                            <div class="stat-label">バイラルポテンシャル</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${pillarEvaluations.technical_quality.score}/${pillarEvaluations.technical_quality.max_score}</div>
-                            <div class="stat-label">技術品質</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${pillarEvaluations.hook_effectiveness.score}/${pillarEvaluations.hook_effectiveness.max_score}</div>
-                            <div class="stat-label">フック効力</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="result-card">
-                    <h3>🏗️ 評価柱の詳細</h3>
-                    ${displayPillarDetails(pillarEvaluations)}
-                </div>
-
-                ${displayStrategicRecommendations(recommendations)}
-
-                ${displayPlatformOptimization(platformOptimization)}
-            `;
-        }
-
-        function displayPillarDetails(pillarEvaluations) {
-            const pillars = [
-                { key: 'technical_quality', name: '技術品質', emoji: '🔧' },
-                { key: 'hook_effectiveness', name: 'フック効力', emoji: '🎯' },
-                { key: 'narrative_retention', name: 'ナラティブ維持率', emoji: '📖' },
-                { key: 'engagement_signals', name: 'エンゲージメントシグナル', emoji: '💬' },
-                { key: 'platform_integrity', name: 'プラットフォーム整合性', emoji: '📱' }
-            ];
-
-            return pillars.map(pillar => {
-                const evaluation = pillarEvaluations[pillar.key];
-                const score = evaluation.score;
-                const maxScore = evaluation.max_score;
-                const percentage = Math.round((score / maxScore) * 100);
-                
-                return `
-                    <div class="pillar-item">
-                        <h4>${pillar.emoji} ${pillar.name} (${score}/${maxScore} - ${percentage}%)</h4>
-                        <div class="pillar-details">
-                            ${Object.entries(evaluation.details).map(([key, value]) => `
-                                <div class="detail-item">
-                                    <strong>${key}:</strong> ${value}
-                                </div>
-                            `).join('')}
-                        </div>
-                        ${evaluation.recommendations.length > 0 ? `
-                            <div class="pillar-recommendations">
-                                <strong>推奨事項:</strong>
-                                <ul>
-                                    ${evaluation.recommendations.map(rec => `<li>${rec}</li>`).join('')}
-                                </ul>
+            const engagementAnalysis = originalAnalysis.engagement_analysis;
+            if (engagementAnalysis && !engagementAnalysis.error) {
+                 html += `
+                    <div class="result-card">
+                        <h3>📊 定量エンゲージメント分析</h3>
+                        <div class="stats-grid">
+                             <div class="stat-item">
+                                <div class="stat-value">${safeToFixed(engagementAnalysis.engagement_analysis?.engagement_rate, 2)}%</div>
+                                <div class="stat-label">エンゲージメント率</div>
                             </div>
-                        ` : ''}
+                            <div class="stat-item">
+                                <div class="stat-value">${(engagementAnalysis.video_info?.view_count || 0).toLocaleString()}</div>
+                                <div class="stat-label">視聴回数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${(engagementAnalysis.video_info?.like_count || 0).toLocaleString()}</div>
+                                <div class="stat-label">いいね数</div>
+                            </div>
+                             <div class="stat-item">
+                                <div class="stat-value">${(engagementAnalysis.video_info?.comment_count || 0).toLocaleString()}</div>
+                                <div class="stat-label">コメント数</div>
+                            </div>
+                        </div>
                     </div>
-                `;
-            }).join('');
-        }
-
-        function displayStrategicRecommendations(recommendations) {
-            if (!recommendations || recommendations.length === 0) {
-                return '';
+                 `;
             }
 
-            return `
-                <div class="strategic-recommendations">
-                    <h4>💡 戦略的推奨事項</h4>
-                    <ul>
-                        ${recommendations.map(rec => `<li>• ${rec}</li>`).join('')}
-                    </ul>
-                </div>
-            `;
-        }
-
-        function displayPlatformOptimization(platformOptimization) {
-            return `
-                <div class="platform-optimization">
-                    <h4>📱 プラットフォーム別最適化</h4>
-                    <div class="platform-grid">
-                        <div class="platform-item">
-                            <h5>🎬 YouTube Shorts</h5>
-                            <p><strong>焦点:</strong> ${platformOptimization.youtube_shorts.focus}</p>
-                            <ul>
-                                ${platformOptimization.youtube_shorts.recommendations.map(rec => `<li>${rec}</li>`).join('')}
-                            </ul>
-                        </div>
-                        <div class="platform-item">
-                            <h5>🎵 TikTok</h5>
-                            <p><strong>焦点:</strong> ${platformOptimization.tiktok.focus}</p>
-                            <ul>
-                                ${platformOptimization.tiktok.recommendations.map(rec => `<li>${rec}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            `;
+            return html;
         }
 
         // Enterキーで分析開始
         document.getElementById('videoUrl').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                analyzeVideo();
-            }
+            if (e.key === 'Enter') analyzeVideo();
         });
-
-        // APIキー入力フィールドでEnterキーを押したときの処理
-        document.getElementById('apiKeyInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                saveApiKey();
-            }
-        });
-
-        // 初期選択
-        document.querySelector('.option-card').classList.add('selected');
     </script>
 </body>
 </html> 

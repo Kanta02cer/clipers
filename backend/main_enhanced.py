@@ -9,9 +9,11 @@ import json
 from improved_audio_analyzer import ImprovedAudioAnalyzer, YouTubeEngagementAnalyzer, ComprehensiveAnalyzer
 from visualization import AudioVisualizer
 from video_evaluation_framework import VideoEvaluationFramework
+from gemini_analyzer import GeminiAnalyzer # GeminiAnalyzerをインポート
 from datetime import datetime
+import re
 
-app = FastAPI(title="YouTube盛り上がり分析ツール (Enhanced)", version="2.0.0")
+app = FastAPI(title="YouTube盛り上がり分析ツール (Enhanced)", version="2.1.0-gemini")
 
 # CORS設定
 app.add_middleware(
@@ -36,10 +38,12 @@ class AudioAnalysisRequest(BaseModel):
     url: str
     download_audio: bool = True
     youtube_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None # Gemini APIキーを追加
 
 class AudioAnalysisResponse(BaseModel):
     video_info: VideoInfo
     audio_file_path: Optional[str]
+    transcript_file_path: Optional[str] # 字幕ファイルパスを追加
     audio_duration: Optional[float]
     sample_rate: Optional[int]
     debug_info: dict
@@ -51,9 +55,20 @@ comprehensive_analyzer = ComprehensiveAnalyzer()
 visualizer = AudioVisualizer()
 evaluation_framework = VideoEvaluationFramework()
 
+def parse_vtt(file_path: str) -> str:
+    """VTTファイルからテキストのみを抽出する"""
+    if not os.path.exists(file_path):
+        return ""
+    with open(file_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    
+    # タイムスタンプ行と空行を除外し、テキストのみを結合
+    text_lines = [line.strip() for line in lines if not re.match(r'^\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}', line) and 'WEBVTT' not in line and line.strip() != '']
+    return ' '.join(text_lines)
+
 @app.get("/")
 async def root():
-    return {"message": "YouTube盛り上がり分析ツール API (Enhanced v2.0.0)"}
+    return {"message": "YouTube盛り上がり分析ツール API (Enhanced v2.1.0-gemini)"}
 
 @app.post("/download-audio-enhanced", response_model=AudioAnalysisResponse)
 async def download_audio_enhanced(request: AudioAnalysisRequest):
@@ -68,7 +83,7 @@ async def download_audio_enhanced(request: AudioAnalysisRequest):
         debug_info['temp_dir'] = temp_dir
         print(f"一時ディレクトリ作成: {temp_dir}")
         
-        # 最適化されたyt-dlpの設定
+        # 最適化されたyt-dlpの設定（字幕取得機能付き）
         ydl_opts = {
             'format': 'bestaudio[ext=m4a]/bestaudio[ext=mp3]/bestaudio[ext=webm]/bestaudio/best',
             'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
@@ -93,8 +108,9 @@ async def download_audio_enhanced(request: AudioAnalysisRequest):
             'extractaudio': True,
             'audioformat': 'wav',
             'audioquality': '192K',
-            'writesubtitles': False,
-            'writeautomaticsub': False,
+            'writesubtitles': True,
+            'writeautomaticsub': True,
+            'subtitleslangs': ['ja', 'en', 'en-US'], # 日本語と英語の字幕を優先
             'writethumbnail': False,
             'writeinfojson': False,
             'writedescription': False,
@@ -244,6 +260,10 @@ async def download_audio_enhanced(request: AudioAnalysisRequest):
             else:
                 audio_file_path = None
             
+            # 字幕ファイルを探す (.vtt)
+            subtitle_file = next((f for f in all_files if f.endswith('.vtt')), None)
+            transcript_file_path = os.path.join(temp_dir, subtitle_file) if subtitle_file else None
+            
             return AudioAnalysisResponse(
                 video_info=VideoInfo(
                     title=info.get('title', ''),
@@ -253,8 +273,9 @@ async def download_audio_enhanced(request: AudioAnalysisRequest):
                     like_count=info.get('like_count')
                 ),
                 audio_file_path=audio_file_path,
+                transcript_file_path=transcript_file_path,
                 audio_duration=info.get('duration'),
-                sample_rate=44100,
+                sample_rate=44100, # yt-dlpのデフォルトに合わせる
                 debug_info=debug_info
             )
             
@@ -405,7 +426,75 @@ async def analyze_comprehensive(request: AudioAnalysisRequest):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "version": "2.0.0"}
+    return {"status": "healthy", "version": "2.1.0-gemini"}
+
+@app.post("/analyze-gemini-enhanced")
+async def analyze_gemini_enhanced(request: AudioAnalysisRequest):
+    """
+    Gemini AIによる質的分析を統合した最先端の動画分析
+    """
+    if not request.youtube_api_key:
+        raise HTTPException(status_code=400, detail="YouTube API keyが必要です")
+    if not request.gemini_api_key:
+        raise HTTPException(status_code=400, detail="Gemini API Keyが必要です")
+
+    try:
+        # 1. 音声、字幕、動画情報をダウンロード
+        download_result = await download_audio_enhanced(request)
+        
+        # 2. 既存の包括的分析を実行
+        comprehensive_result = {}
+        if download_result.audio_file_path:
+            comprehensive_analyzer.engagement_analyzer.set_api_key(request.youtube_api_key)
+            comprehensive_result = comprehensive_analyzer.analyze_video_comprehensive(
+                request.url, 
+                download_result.audio_file_path, 
+                request.youtube_api_key
+            )
+        else:
+            # 音声がない場合はエンゲージメント分析のみ
+            engagement_analyzer.set_api_key(request.youtube_api_key)
+            video_id = engagement_analyzer.extract_video_id(request.url)
+            comprehensive_result['engagement_analysis'] = engagement_analyzer.get_video_engagement_data(video_id)
+            comprehensive_result['audio_analysis'] = {'error': 'Audio file not available'}
+
+        # 3. Gemini分析のためのデータを準備
+        transcript = ""
+        if download_result.transcript_file_path:
+            transcript = parse_vtt(download_result.transcript_file_path)
+        
+        if not transcript:
+            transcript = download_result.video_info.description or "字幕または説明文がありません。"
+
+        engagement_analysis = comprehensive_result.get("engagement_analysis", {})
+        comments_data = engagement_analysis.get("raw_comments", [])
+        
+        if not comments_data and 'comments' in engagement_analysis:
+            # フォールバック: コメント詳細からテキストを抽出
+            comment_details = engagement_analysis['comments'].get('comment_details', [])
+            comments_data = [comment['text'] for comment in comment_details[:50]]
+
+        # 4. Gemini分析を実行（リアルタイム版）
+        gemini_analyzer = GeminiAnalyzer(api_key=request.gemini_api_key)
+        gemini_analysis = gemini_analyzer.analyze_content_with_gemini_realtime(
+            transcript, 
+            comments_data,
+            engagement_analysis
+        )
+
+        # 5. 既存の結果とGeminiの結果をマージして返す
+        return {
+            "video_info": download_result.video_info,
+            "original_analysis": comprehensive_result,
+            "gemini_enhanced_analysis": gemini_analysis.get("analysis_result", {}),
+            "analysis_steps": gemini_analysis.get("analysis_steps", []),
+            "analysis_timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Gemini拡張分析に失敗しました: {str(e)}")
 
 @app.post("/evaluate-video-framework")
 async def evaluate_video_framework(request: AudioAnalysisRequest):
@@ -498,19 +587,23 @@ async def evaluate_video_framework(request: AudioAnalysisRequest):
 @app.get("/api-info")
 async def api_info():
     return {
-        "version": "2.0.0",
+        "version": "2.1.0-gemini",
         "features": [
             "正確なdB測定",
             "YouTubeエンゲージメント分析",
             "包括的動画分析",
             "視聴箇所特定",
             "コメント分析",
-            "統合縦型動画最適化フレームワーク"
+            "統合縦型動画最適化フレームワーク",
+            "Gemini AI質的分析",
+            "字幕自動取得",
+            "セマンティックホットスポット分析"
         ],
         "endpoints": [
             "/analyze-audio-accurate - 正確な音声分析",
             "/analyze-engagement - エンゲージメント分析",
             "/analyze-comprehensive - 包括的分析",
+            "/analyze-gemini-enhanced - Gemini AI拡張分析",
             "/evaluate-video-framework - 動画評価フレームワーク"
         ]
     } 

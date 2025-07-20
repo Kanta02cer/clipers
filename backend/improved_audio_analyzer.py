@@ -174,13 +174,14 @@ class YouTubeEngagementAnalyzer:
         self.youtube_api_key = None  # YouTube Data API v3キー
         
     def set_api_key(self, api_key: str):
-        """YouTube Data API v3キーを設定"""
-        # テスト用キーや無効なキーは設定しない
-        if api_key and api_key != "test_key" and not api_key.startswith("AIzaSy"):
-            self.youtube_api_key = api_key
+        """YouTube Data API v3キーを設定（改善版）"""
+        # APIキーの検証を改善
+        if api_key and api_key.strip() and len(api_key) > 20:
+            self.youtube_api_key = api_key.strip()
+            print(f"YouTube APIキーが設定されました: {api_key[:10]}...")
         else:
             self.youtube_api_key = None
-            print(f"無効なAPIキーが提供されました: {api_key[:10]}...")
+            print(f"無効なAPIキーが提供されました: {api_key[:10] if api_key else 'None'}...")
     
     def extract_video_id(self, url: str) -> str:
         """YouTube URLから動画IDを抽出"""
@@ -197,12 +198,14 @@ class YouTubeEngagementAnalyzer:
     
     def get_video_engagement_data(self, video_id: str) -> Dict:
         """
-        YouTube動画のエンゲージメントデータを取得
+        YouTube動画のエンゲージメントデータを取得（改善版）
         """
         if not self.youtube_api_key:
             return {"error": "YouTube API key not set"}
         
         try:
+            print(f"動画ID {video_id} のエンゲージメントデータを取得中...")
+            
             # 動画の基本情報を取得
             video_url = f"https://www.googleapis.com/youtube/v3/videos"
             params = {
@@ -212,44 +215,81 @@ class YouTubeEngagementAnalyzer:
             }
             
             response = requests.get(video_url, params=params)
+            print(f"動画情報API応答: {response.status_code}")
+            
             if response.status_code != 200:
-                return {"error": f"YouTube API error: {response.status_code}"}
+                return {"error": f"YouTube API error: {response.status_code} - {response.text}"}
             
             video_data = response.json()
             if not video_data.get('items'):
                 return {"error": "Video not found"}
             
             video_info = video_data['items'][0]
+            print(f"動画タイトル: {video_info['snippet']['title']}")
             
-            # コメントを取得（最大100件）
-            comments_url = f"https://www.googleapis.com/youtube/v3/commentThreads"
-            comment_params = {
-                'part': 'snippet',
-                'videoId': video_id,
-                'maxResults': 100,
-                'order': 'relevance',
-                'key': self.youtube_api_key
-            }
+            # コメントを取得（複数ページ対応）
+            all_comments = []
+            next_page_token = None
+            max_pages = 3  # 最大3ページ（300件のコメント）
             
-            comments_response = requests.get(comments_url, params=comment_params)
-            comments_data = comments_response.json() if comments_response.status_code == 200 else {"items": []}
+            for page in range(max_pages):
+                comments_url = f"https://www.googleapis.com/youtube/v3/commentThreads"
+                comment_params = {
+                    'part': 'snippet',
+                    'videoId': video_id,
+                    'maxResults': 100,
+                    'order': 'relevance',
+                    'key': self.youtube_api_key
+                }
+                
+                if next_page_token:
+                    comment_params['pageToken'] = next_page_token
+                
+                comments_response = requests.get(comments_url, params=comment_params)
+                print(f"コメント取得ページ {page + 1}: {comments_response.status_code}")
+                
+                if comments_response.status_code == 200:
+                    comments_data = comments_response.json()
+                    page_comments = comments_data.get('items', [])
+                    all_comments.extend(page_comments)
+                    
+                    # 次のページがあるかチェック
+                    next_page_token = comments_data.get('nextPageToken')
+                    if not next_page_token:
+                        break
+                else:
+                    print(f"コメント取得エラー: {comments_response.status_code}")
+                    break
+            
+            print(f"取得したコメント数: {len(all_comments)}")
+            
+            # 詳細なコメント分析
+            detailed_comments = self._analyze_comments_detailed(all_comments)
             
             return {
                 "video_info": {
                     "title": video_info['snippet']['title'],
+                    "description": video_info['snippet'].get('description', ''),
                     "duration": self._parse_duration(video_info['contentDetails']['duration']),
                     "view_count": int(video_info['statistics'].get('viewCount', 0)),
                     "like_count": int(video_info['statistics'].get('likeCount', 0)),
-                    "comment_count": int(video_info['statistics'].get('commentCount', 0))
+                    "comment_count": int(video_info['statistics'].get('commentCount', 0)),
+                    "published_at": video_info['snippet'].get('publishedAt', ''),
+                    "channel_title": video_info['snippet'].get('channelTitle', '')
                 },
                 "engagement_analysis": {
                     "engagement_rate": self._calculate_engagement_rate(video_info['statistics']),
-                    "comments": self._analyze_comments(comments_data.get('items', [])),
-                    "hot_timestamps": self._find_hot_timestamps(comments_data.get('items', []))
-                }
+                    "comments": detailed_comments,
+                    "hot_timestamps": self._find_hot_timestamps(all_comments),
+                    "comment_sentiment": self._analyze_comment_sentiment(all_comments),
+                    "popular_keywords": self._extract_popular_keywords(all_comments)
+                },
+                "raw_comments": [comment['snippet']['topLevelComment']['snippet']['textDisplay'] 
+                               for comment in all_comments[:50]]  # 上位50件のコメントテキスト
             }
             
         except Exception as e:
+            print(f"エンゲージメントデータ取得エラー: {str(e)}")
             return {"error": f"Failed to get engagement data: {str(e)}"}
     
     def _parse_duration(self, duration_str: str) -> int:
@@ -270,18 +310,39 @@ class YouTubeEngagementAnalyzer:
         engagement_rate = ((like_count + comment_count) / view_count) * 100
         return round(engagement_rate, 3)
     
-    def _analyze_comments(self, comments: List[Dict]) -> Dict:
-        """コメント分析"""
+    def _analyze_comments_detailed(self, comments: List[Dict]) -> Dict:
+        """詳細なコメント分析"""
         if not comments:
-            return {"total_comments": 0, "average_length": 0}
+            return {"total_comments": 0, "average_length": 0, "comment_details": []}
         
-        total_length = sum(len(comment['snippet']['topLevelComment']['snippet']['textDisplay']) 
-                          for comment in comments)
+        comment_details = []
+        total_length = 0
+        
+        for comment in comments:
+            comment_snippet = comment['snippet']['topLevelComment']['snippet']
+            text = comment_snippet['textDisplay']
+            like_count = comment_snippet.get('likeCount', 0)
+            
+            total_length += len(text)
+            
+            comment_details.append({
+                "text": text,
+                "like_count": like_count,
+                "length": len(text),
+                "author": comment_snippet.get('authorDisplayName', ''),
+                "published_at": comment_snippet.get('publishedAt', '')
+            })
         
         return {
             "total_comments": len(comments),
-            "average_length": round(total_length / len(comments), 1)
+            "average_length": round(total_length / len(comments), 1),
+            "comment_details": comment_details,
+            "total_likes_on_comments": sum(c['like_count'] for c in comment_details)
         }
+    
+    def _analyze_comments(self, comments: List[Dict]) -> Dict:
+        """コメント分析（後方互換性のため）"""
+        return self._analyze_comments_detailed(comments)
     
     def _find_hot_timestamps(self, comments: List[Dict]) -> List[Dict]:
         """コメントからホットなタイムスタンプを抽出"""
@@ -322,6 +383,61 @@ class YouTubeEngagementAnalyzer:
             return hot_timestamps
         
         return []
+    
+    def _analyze_comment_sentiment(self, comments: List[Dict]) -> Dict:
+        """コメントの感情分析（簡易版）"""
+        if not comments:
+            return {"positive": 0, "negative": 0, "neutral": 0}
+        
+        positive_words = ['いい', '良い', '素晴らしい', '最高', '面白い', '感動', '笑', '愛', '好き', '楽しい']
+        negative_words = ['悪い', 'つまらない', '嫌い', '最悪', 'ひどい', '退屈', 'つらい', '悲しい']
+        
+        positive_count = 0
+        negative_count = 0
+        neutral_count = 0
+        
+        for comment in comments:
+            text = comment['snippet']['topLevelComment']['snippet']['textDisplay'].lower()
+            
+            positive_matches = sum(1 for word in positive_words if word in text)
+            negative_matches = sum(1 for word in negative_words if word in text)
+            
+            if positive_matches > negative_matches:
+                positive_count += 1
+            elif negative_matches > positive_matches:
+                negative_count += 1
+            else:
+                neutral_count += 1
+        
+        total = len(comments)
+        return {
+            "positive": positive_count,
+            "negative": negative_count,
+            "neutral": neutral_count,
+            "positive_rate": round((positive_count / total) * 100, 1) if total > 0 else 0,
+            "negative_rate": round((negative_count / total) * 100, 1) if total > 0 else 0
+        }
+    
+    def _extract_popular_keywords(self, comments: List[Dict]) -> List[Dict]:
+        """人気キーワードの抽出"""
+        if not comments:
+            return []
+        
+        import re
+        all_text = ' '.join([comment['snippet']['topLevelComment']['snippet']['textDisplay'] 
+                           for comment in comments])
+        
+        words = re.findall(r'[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+', all_text)
+        word_counts = {}
+        
+        for word in words:
+            if len(word) > 1:  # 1文字の単語は除外
+                word_counts[word] = word_counts.get(word, 0) + 1
+        
+        # 上位10個のキーワードを返す
+        popular_keywords = sorted(word_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+        
+        return [{"word": word, "count": count} for word, count in popular_keywords]
 
 class ComprehensiveAnalyzer:
     def __init__(self):
