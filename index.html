@@ -1145,13 +1145,18 @@
     </div>
 
     <script>
-        // 強力なキャッシュバスティング
-        const CACHE_BUSTER = '?v=' + Date.now() + '&cb=' + Math.random();
+        // 完全なキャッシュバスティング
+        const CACHE_BUSTER = '?v=' + Date.now() + '&cb=' + Math.random() + '&t=' + performance.now();
         const API_BASE_URL = 'http://127.0.0.1:8000';
+        
+        // 即座にキャッシュクリア
+        if (window.location.search.indexOf('v=') === -1) {
+            window.location.search = '?v=' + Date.now() + '&cb=' + Math.random();
+        }
         
         // ページ読み込み時にキャッシュクリア
         if (window.performance && window.performance.navigation.type === window.performance.navigation.TYPE_BACK_FORWARD) {
-            window.location.reload();
+            window.location.reload(true);
         }
         
         // 強制キャッシュクリア
@@ -1164,6 +1169,30 @@
         // コンソールに現在のAPI_BASE_URLを表示
         console.log('現在のAPI_BASE_URL:', API_BASE_URL);
         console.log('キャッシュバスター:', CACHE_BUSTER);
+        console.log('ページURL:', window.location.href);
+        
+        // 古い関数の完全削除
+        if (typeof window.analyzeVideo === 'function') {
+            console.warn('古いanalyzeVideo関数が検出されました。削除します。');
+            delete window.analyzeVideo;
+        }
+        
+        // 古いエンドポイントの呼び出しを防止
+        const oldEndpoints = [
+            '/analyze-gemini-enhanced',
+            '/analyze-comprehensive', 
+            '/evaluate-video-framework'
+        ];
+        
+        oldEndpoints.forEach(endpoint => {
+            console.warn(`古いエンドポイント ${endpoint} の呼び出しを防止します。`);
+        });
+        
+        // グローバル関数の上書き
+        window.analyzeVideo = function() {
+            console.error('古いanalyzeVideo関数が呼び出されました。新しいstartAnalysis関数を使用してください。');
+            showStatus('エラー: 古いバージョンのページが使用されています。ページを再読み込みしてください。', 'error');
+        };
         let currentTaskId = null;
         let statusCheckInterval = null;
         let geminiThoughts = [];
@@ -1237,9 +1266,18 @@
             }
         }
 
-        // 分析開始
+        // 分析開始（完全書き換え）
         async function startAnalysis() {
-            console.log('分析開始関数が呼び出されました');
+            console.log('=== 分析開始関数が呼び出されました ===');
+            console.log('現在のAPI_BASE_URL:', API_BASE_URL);
+            console.log('現在のページURL:', window.location.href);
+            
+            // 古い関数の呼び出しを防止
+            if (typeof window.analyzeVideo === 'function') {
+                console.error('古いanalyzeVideo関数が呼び出されようとしています。ブロックします。');
+                showStatus('エラー: 古いバージョンのページが使用されています。ページを再読み込みしてください。', 'error');
+                return;
+            }
             
             const url = document.getElementById('videoUrl').value;
             const youtubeKey = document.getElementById('youtubeApiKey').value;
@@ -1248,7 +1286,14 @@
             const downloadVideo = document.getElementById('downloadVideo').value === 'true';
             const outputFormat = document.getElementById('outputFormat').value;
 
-            console.log('入力値:', { url, youtubeKey: youtubeKey ? '***' : '未設定', geminiKey: geminiKey ? '***' : '未設定', analysisType, downloadVideo, outputFormat });
+            console.log('入力値:', { 
+                url, 
+                youtubeKey: youtubeKey ? '***' : '未設定', 
+                geminiKey: geminiKey ? '***' : '未設定', 
+                analysisType, 
+                downloadVideo, 
+                outputFormat 
+            });
 
             if (!url || !youtubeKey || !geminiKey) {
                 showStatus('URLとAPIキーを入力してください', 'error');
@@ -1271,7 +1316,11 @@
                 output_format: outputFormat
             };
 
-            console.log('リクエストデータ準備完了:', { ...requestData, youtube_api_key: '***', gemini_api_key: '***' });
+            console.log('リクエストデータ準備完了:', { 
+                ...requestData, 
+                youtube_api_key: '***', 
+                gemini_api_key: '***' 
+            });
 
             try {
                 if (analysisType === 'async') {
