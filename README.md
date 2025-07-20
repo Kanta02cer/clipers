@@ -1,8 +1,27 @@
-# 🎵 YouTube盛り上がり分析ツール (Enhanced v2.0.0)
+# 🎵 YouTube盛り上がり分析ツール (Enhanced v2.1.0-gemini)
 
 YouTube動画の音声分析とエンゲージメント分析を統合した包括的な分析ツールです。
 
-## ✨ 新機能
+## ✨ 新機能 (v2.1.0-gemini)
+
+### 🤖 AI分析機能
+- **Gemini AI統合**: Google Gemini AIによる質的分析
+- **リアルタイム可視化**: AIの思考プロセスを4段階で表示
+- **包括的分析**: 音声、コメント、エンゲージメントの統合分析
+
+### 📊 エンゲージメント分析の拡張
+- **感情分析**: ポジティブ/ネガティブ/ニュートラルの感情を分析
+- **キーワード抽出**: コメントから頻出キーワードを抽出
+- **詳細統計**: コメントのいいね数、投稿者情報、投稿日時
+- **ホットタイムスタンプ**: コメントで言及された時間帯の分析
+
+### 🔧 技術的改善
+- **YouTubeコメント収集改善**: 最大300件のコメント取得
+- **AI分析プロセス可視化**: リアルタイムでの分析ステップ表示
+- **Python 3.13対応**: 最新Pythonバージョンでの動作確認
+- **エラーハンドリング強化**: より詳細なエラー情報
+
+## 🎵 既存機能
 
 ### 🎵 正確なdB測定
 - 標準的な音声レベルに基づく正確なdB値
@@ -29,12 +48,12 @@ YouTube動画の音声分析とエンゲージメント分析を統合した包�
 ```
 Clipers/
 ├── backend/
-│   ├── main_enhanced.py          # 新しいAPIサーバー
-│   ├── improved_audio_analyzer.py # 改善された音声分析器
-│   ├── optimized_audio_analyzer.py # 最適化された音声分析器
-│   ├── audio_analyzer.py         # 基本音声分析器
+│   ├── main_enhanced.py          # メインAPIサーバー
+│   ├── improved_audio_analyzer.py # 音声・エンゲージメント分析
+│   ├── gemini_analyzer.py        # Gemini AI分析（新規）
+│   ├── video_evaluation_framework.py # 動画評価フレームワーク
 │   ├── visualization.py          # 視覚化機能
-│   └── test_enhanced_analysis.py # テストスクリプト
+│   └── requirements.txt          # 依存関係
 ├── frontend/
 │   └── index.html               # 統合されたフロントエンド
 ├── docs/
@@ -55,71 +74,74 @@ pip install -r requirements.txt
 
 ### 2. サーバー起動
 ```bash
+# バックエンド（ポート8000）
 cd backend
 source venv/bin/activate
-uvicorn main_enhanced:app --reload --host 0.0.0.0 --port 8000
-```
+python3 -m uvicorn main_enhanced:app --reload --host 127.0.0.1 --port 8000
 
-### 3. フロントエンド起動
-```bash
+# フロントエンド（ポート8080）
 cd frontend
-python3 test_frontend.py
+python3 -m http.server 8080
 ```
 
-### 4. ブラウザでアクセス
-- `http://localhost:8000` にアクセス
-- `index.html` を開く
+### 3. ブラウザでアクセス
+- **フロントエンド**: http://localhost:8080
+- **バックエンドAPI**: http://127.0.0.1:8000
 
-## 🔑 YouTube API Key設定
+## 🔑 API Key設定
 
-### 1. Google Cloud Consoleでプロジェクト作成
-- [Google Cloud Console](https://console.cloud.google.com/) にアクセス
-- 新しいプロジェクトを作成
+### YouTube API Key設定
+1. [Google Cloud Console](https://console.cloud.google.com/) にアクセス
+2. 新しいプロジェクトを作成
+3. YouTube Data API v3を有効化
+4. APIキーを取得
 
-### 2. YouTube Data API v3を有効化
-- APIライブラリから「YouTube Data API v3」を検索
-- 「有効にする」をクリック
+### Gemini API Key設定
+1. [Google AI Studio](https://makersuite.google.com/app/apikey) にアクセス
+2. APIキーを生成
+3. フロントエンドで設定
 
-### 3. APIキーを取得
-- 認証情報から「APIキー」を作成
-- 生成されたキーをコピー
-
-### 4. フロントエンドで設定
-- ブラウザで `index.html` を開く
-- 「YouTube API Key設定」セクションでキーを入力
+### フロントエンドで設定
+- ブラウザで `http://localhost:8080` を開く
+- 「API Key設定」セクションでキーを入力
 - 「APIキーを保存」をクリック
 
 ## 📊 分析機能
 
-### 🎵 基本音声分析
-- 従来の音声分析機能
-- 盛り上がりポイントの特定
-- 視覚化チャートの生成
-
-### 🎵 正確な音声分析
+### 🎵 音声分析
 - 正確なdB測定
-- 詳細な音量分析
-- 精密な盛り上がりポイント検出
+- 音調分析
+- 盛り上がりポイント検出
+- 視覚化機能
 
 ### 📊 エンゲージメント分析
-- いいね・コメント・視聴回数分析
-- エンゲージメント率の計算
-- ホットタイムスタンプの抽出
+- YouTube API統合
+- コメント分析
+- エンゲージメント率計算
+- 感情分析
 
-### 🚀 包括的分析
-- 音声 + エンゲージメント統合分析
-- 包括的スコアの計算
-- 多角的な盛り上がりポイント特定
+### 🤖 AI分析
+- Gemini AI統合
+- 質的分析
+- リアルタイム可視化
+- 包括的評価
+
+### 🔍 AI分析プロセス表示
+- **ステップ1**: データ準備 - 字幕とコメントデータの準備
+- **ステップ2**: エンゲージメント分析 - 感情分析とキーワード抽出
+- **ステップ3**: AI分析実行 - Gemini AIによる質的分析
+- **ステップ4**: 結果解析 - 分析結果の解析と統合
 
 ## 🔧 APIエンドポイント
 
 ### 基本分析
-- `POST /analyze-with-visualization` - 基本音声分析
-
-### 改善された分析
 - `POST /analyze-audio-accurate` - 正確な音声分析
 - `POST /analyze-engagement` - エンゲージメント分析
 - `POST /analyze-comprehensive` - 包括的分析
+
+### AI分析
+- `POST /analyze-gemini-enhanced` - Gemini AI拡張分析
+- `POST /evaluate-video-framework` - 動画評価フレームワーク
 
 ### ユーティリティ
 - `GET /health` - ヘルスチェック
@@ -137,6 +159,7 @@ python test_enhanced_analysis.py
 1. 短い動画（5分以下）でテスト
 2. 長い動画（10分以上）でテスト
 3. 人気動画とマイナー動画でテスト
+4. Gemini AI分析機能のテスト
 
 ## 🔒 セキュリティ
 
@@ -147,7 +170,8 @@ python test_enhanced_analysis.py
 
 ### 推奨設定
 ```bash
-export YOUTUBE_API_KEY="your_api_key_here"
+export YOUTUBE_API_KEY="your_youtube_api_key_here"
+export GEMINI_API_KEY="your_gemini_api_key_here"
 ```
 
 ## 📈 パフォーマンス最適化
@@ -170,6 +194,7 @@ export YOUTUBE_API_KEY="your_api_key_here"
 #### APIキーが無効
 - APIキーが正しくコピーされているか確認
 - YouTube Data API v3が有効化されているか確認
+- Gemini APIキーが有効か確認
 
 #### クォータ制限
 - Google Cloud Consoleでクォータ使用量を確認
@@ -178,12 +203,20 @@ export YOUTUBE_API_KEY="your_api_key_here"
 #### サーバーが起動しない
 - 仮想環境がアクティブになっているか確認
 - ポート8000が使用可能か確認
+- Python 3.13がインストールされているか確認
+
+#### AI分析が失敗する
+- Gemini APIキーが正しく設定されているか確認
+- インターネット接続を確認
+- APIキーの権限を確認
 
 ## 📚 参考資料
 
 - [YouTube Data API v3 ドキュメント](https://developers.google.com/youtube/v3)
 - [Google Cloud Console](https://console.cloud.google.com/)
+- [Google AI Studio](https://makersuite.google.com/app/apikey)
 - [FastAPI ドキュメント](https://fastapi.tiangolo.com/)
+- [Gemini AI ドキュメント](https://ai.google.dev/)
 
 ## 🤝 貢献
 
@@ -201,11 +234,30 @@ export YOUTUBE_API_KEY="your_api_key_here"
 問題が発生した場合は、以下を確認してください：
 
 1. **Google Cloud Console**の設定
-2. **APIキー**の有効性
-3. **ネットワーク接続**
-4. **サーバー**の起動状態
+2. **YouTube APIキー**の有効性
+3. **Gemini APIキー**の有効性
+4. **ネットワーク接続**
+5. **サーバー**の起動状態
+
+## 📋 バージョン履歴
+
+### v2.1.0-gemini (最新)
+- YouTubeコメント収集改善
+- AI分析プロセス可視化
+- 詳細なエンゲージメント分析
+- Python 3.13対応
+
+### v2.0.0
+- Gemini AI統合
+- 包括的分析機能
+- モダンUI実装
+
+### v1.0.0
+- 基本音声分析
+- YouTube API統合
+- エンゲージメント分析
 
 ---
 
-**Version**: 2.0.0  
-**Last Updated**: 2024年12月 
+**Version**: 2.1.0-gemini  
+**Last Updated**: 2025年7月 
