@@ -1145,6 +1145,8 @@
     </div>
 
     <script>
+        // キャッシュバスティング
+        const CACHE_BUSTER = '?v=' + Date.now();
         const API_BASE_URL = 'http://127.0.0.1:8000';
         let currentTaskId = null;
         let statusCheckInterval = null;
@@ -1285,7 +1287,7 @@
                 if (error.name === 'TypeError' && error.message.includes('fetch')) {
                     throw new Error(`サーバーに接続できません。サーバーが起動しているか確認してください。`);
                 } else if (error.message.includes('404')) {
-                    throw new Error(`APIエンドポイントが見つかりません。サーバーの設定を確認してください。`);
+                    throw new Error(`APIエンドポイントが見つかりません。正しいエンドポイント: /analyze-video または /analyze-video-async`);
                 } else {
                     throw new Error(`API呼び出しエラー: ${error.message}`);
                 }
