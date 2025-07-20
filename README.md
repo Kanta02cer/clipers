@@ -54,8 +54,7 @@ Clipers/
 │   ├── video_evaluation_framework.py # 動画評価フレームワーク
 │   ├── visualization.py          # 視覚化機能
 │   └── requirements.txt          # 依存関係
-├── frontend/
-│   └── index.html               # 統合されたフロントエンド
+├── index.html                   # 統合されたフロントエンド
 ├── docs/
 │   └── youtube_api_setup_guide.md # API設定ガイド
 └── README.md
@@ -80,7 +79,7 @@ source venv/bin/activate
 python3 -m uvicorn main_enhanced:app --reload --host 127.0.0.1 --port 8000
 
 # フロントエンド（ポート8080）
-cd frontend
+cd ..
 python3 -m http.server 8080
 ```
 
