@@ -492,8 +492,21 @@
     </div>
 
     <script>
-        // 新しいバージョンのフロントエンド
+        // 新しいバージョンのフロントエンド v3.0
         const API_BASE_URL = 'http://127.0.0.1:8000';
+        
+        // 古い関数の完全削除
+        if (typeof window.analyzeVideo === 'function') {
+            console.warn('古いanalyzeVideo関数を削除します');
+            delete window.analyzeVideo;
+        }
+        
+        // グローバル関数の上書き
+        window.analyzeVideo = function() {
+            console.error('古いanalyzeVideo関数が呼び出されました。新しいstartAnalysis関数を使用してください。');
+            alert('エラー: 古いバージョンのページが使用されています。ページを再読み込みしてください。');
+            return false;
+        };
         let currentTaskId = null;
         let statusCheckInterval = null;
         let geminiThoughts = [];
@@ -503,6 +516,20 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('=== 新しいフロントエンド v3.0 が読み込まれました ===');
             console.log('API_BASE_URL:', API_BASE_URL);
+            
+            // 古い関数の完全削除
+            if (typeof window.analyzeVideo === 'function') {
+                console.warn('古いanalyzeVideo関数を削除します');
+                delete window.analyzeVideo;
+            }
+            
+            // グローバル関数の上書き
+            window.analyzeVideo = function() {
+                console.error('古いanalyzeVideo関数が呼び出されました。新しいstartAnalysis関数を使用してください。');
+                alert('エラー: 古いバージョンのページが使用されています。ページを再読み込みしてください。');
+                return false;
+            };
+            
             loadApiKeys();
             checkServerStatus();
             setInterval(checkServerStatus, 30000); // 30秒ごとにサーバー状態確認
@@ -571,6 +598,15 @@
         // 分析開始（新しいバージョン）
         async function startAnalysis() {
             console.log('=== 新しい分析開始関数が呼び出されました ===');
+            console.log('現在のAPI_BASE_URL:', API_BASE_URL);
+            console.log('現在のページURL:', window.location.href);
+            
+            // 古い関数の呼び出しを防止
+            if (typeof window.analyzeVideo === 'function' && window.analyzeVideo.toString().includes('analyze-gemini-enhanced')) {
+                console.error('古いanalyzeVideo関数が呼び出されようとしています。ブロックします。');
+                showStatus('エラー: 古いバージョンのページが使用されています。ページを再読み込みしてください。', 'error');
+                return;
+            }
             
             const url = document.getElementById('videoUrl').value;
             const youtubeKey = document.getElementById('youtubeApiKey').value;
