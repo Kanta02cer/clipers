@@ -1,202 +1,189 @@
-# 🎵 YouTube盛り上がり分析ツール
+# 🎵 YouTube盛り上がり分析ツール (Enhanced v2.0.0)
 
-YouTube動画の音声を分析して、最も盛り上がるポイントを特定するツールです。
+YouTube動画の音声分析とエンゲージメント分析を統合した包括的な分析ツールです。
 
-## ✨ 機能
+## ✨ 新機能
 
-- **音声分析**: 音量と音調の変化を分析
-- **盛り上がりポイント検出**: 視聴者が最も興奮する瞬間を特定
-- **視覚化**: タイムラインとサマリーチャートを生成
-- **Webインターフェース**: 美しいUIで簡単操作
-- **詳細レポート**: 分析結果と推奨事項を提供
+### 🎵 正確なdB測定
+- 標準的な音声レベルに基づく正確なdB値
+- RMS（二乗平均平方根）による精密計算
+- 動的範囲と変動の詳細分析
 
-## 🚀 セットアップ
+### 📊 YouTubeエンゲージメント分析
+- YouTube Data API v3を使用
+- いいね・コメント・視聴回数分析
+- エンゲージメント率の計算
 
-### 1. 環境準備
+### 🔥 視聴箇所特定機能
+- コメントからタイムスタンプを抽出
+- ホットタイムスタンプの特定
+- 言及回数による重要度判定
 
-```bash
-# Python 3.11をインストール（推奨）
-# macOSの場合
-brew install python@3.11
+### 🚀 包括的分析
+- 音声分析 + エンゲージメント分析の統合
+- 包括的スコアの計算
+- 多角的な盛り上がりポイント特定
 
-# 仮想環境を作成
-python3.11 -m venv venv
-source venv/bin/activate  # macOS/Linux
-# または
-venv\Scripts\activate  # Windows
-```
-
-### 2. 依存関係のインストール
-
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
-### 3. FFmpegのインストール
-
-```bash
-# macOS
-brew install ffmpeg
-
-# Ubuntu/Debian
-sudo apt update
-sudo apt install ffmpeg
-
-# Windows
-# https://ffmpeg.org/download.html からダウンロード
-```
-
-## 🎯 使用方法
-
-### バックエンドサーバーの起動
-
-```bash
-cd backend
-source venv/bin/activate
-uvicorn main_simple:app --reload --host 0.0.0.0 --port 8000
-```
-
-### フロントエンドサーバーの起動
-
-```bash
-cd frontend
-python test_frontend.py
-```
-
-### Webブラウザでアクセス
-
-1. ブラウザで `http://localhost:3000` にアクセス
-2. YouTube動画のURLを入力
-3. 「分析開始」ボタンをクリック
-4. 分析結果を確認
-
-## 📊 API エンドポイント
-
-### 1. 音声分析（視覚化付き）
-```
-POST /analyze-with-visualization
-```
-
-**リクエスト例:**
-```json
-{
-  "url": "https://www.youtube.com/watch?v=9bZkp7q19f0",
-  "download_audio": true
-}
-```
-
-**レスポンス例:**
-```json
-{
-  "video_info": {
-    "title": "PSY - GANGNAM STYLE",
-    "duration": 252.22
-  },
-  "audio_analysis": {
-    "overall_excitement_score": 4.68,
-    "excitement_points": [
-      {
-        "time": 6.55,
-        "intensity": 1.0,
-        "type": "volume"
-      }
-    ],
-    "volume_analysis": {
-      "mean_volume": -12.88,
-      "max_volume": -5.33,
-      "volume_variance": 129.13
-    }
-  },
-  "visualization": {
-    "timeline_image": "base64_encoded_image",
-    "summary_image": "base64_encoded_image"
-  },
-  "report": {
-    "summary": {...},
-    "recommendations": [...]
-  }
-}
-```
-
-### 2. ヘルスチェック
-```
-GET /health
-```
-
-## 🧪 テスト
-
-### 音声分析テスト
-```bash
-cd backend
-python test_audio_analysis.py
-```
-
-### 視覚化テスト
-```bash
-cd backend
-python test_visualization.py
-```
-
-## 📁 プロジェクト構造
+## 🏗️ システム構成
 
 ```
 Clipers/
 ├── backend/
-│   ├── main_simple.py          # メインAPIサーバー
-│   ├── audio_analyzer.py       # 音声分析エンジン
-│   ├── visualization.py        # 視覚化機能
-│   ├── test_*.py              # テストスクリプト
-│   └── venv/                  # Python仮想環境
+│   ├── main_enhanced.py          # 新しいAPIサーバー
+│   ├── improved_audio_analyzer.py # 改善された音声分析器
+│   ├── optimized_audio_analyzer.py # 最適化された音声分析器
+│   ├── audio_analyzer.py         # 基本音声分析器
+│   ├── visualization.py          # 視覚化機能
+│   └── test_enhanced_analysis.py # テストスクリプト
 ├── frontend/
-│   ├── index.html             # Webインターフェース
-│   └── test_frontend.py       # フロントエンドサーバー
-└── README.md                  # このファイル
+│   └── index.html               # 統合されたフロントエンド
+├── docs/
+│   └── youtube_api_setup_guide.md # API設定ガイド
+└── README.md
 ```
 
-## 🔧 技術スタック
+## 🚀 クイックスタート
 
-### バックエンド
-- **FastAPI**: Webフレームワーク
-- **yt-dlp**: YouTube動画ダウンロード
-- **librosa**: 音声分析
-- **numpy/scipy**: 数値計算
-- **matplotlib**: グラフ生成
-- **FFmpeg**: 音声変換
+### 1. 環境セットアップ
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate  # macOS/Linux
+# venv\Scripts\activate   # Windows
+pip install -r requirements.txt
+```
 
-### フロントエンド
-- **HTML5/CSS3**: モダンなUI
-- **JavaScript**: インタラクティブ機能
-- **Base64**: 画像エンコード
+### 2. サーバー起動
+```bash
+cd backend
+source venv/bin/activate
+uvicorn main_enhanced:app --reload --host 0.0.0.0 --port 8000
+```
 
-## 🎨 分析アルゴリズム
+### 3. フロントエンド起動
+```bash
+cd frontend
+python3 test_frontend.py
+```
 
-### 盛り上がりポイント検出
-1. **音量分析**: RMS（二乗平均平方根）を使用
-2. **音調分析**: ピッチ変化を検出
-3. **閾値設定**: 動的に調整可能
-4. **スコアリング**: 0-100のスケール
+### 4. ブラウザでアクセス
+- `http://localhost:8000` にアクセス
+- `index.html` を開く
 
-### 視覚化機能
-- **タイムライン**: 音量変化と盛り上がりポイント
-- **サマリーチャート**: 統計情報と分布
-- **レポート生成**: 自動推奨事項
+## 🔑 YouTube API Key設定
 
-## 🚨 注意事項
+### 1. Google Cloud Consoleでプロジェクト作成
+- [Google Cloud Console](https://console.cloud.google.com/) にアクセス
+- 新しいプロジェクトを作成
 
-1. **YouTube利用規約**: 商用利用時はYouTubeの利用規約を確認
-2. **著作権**: 動画の著作権を尊重
-3. **API制限**: 大量リクエストは避ける
-4. **ストレージ**: 一時ファイルは自動削除
+### 2. YouTube Data API v3を有効化
+- APIライブラリから「YouTube Data API v3」を検索
+- 「有効にする」をクリック
 
-## 🔮 今後の開発予定
+### 3. APIキーを取得
+- 認証情報から「APIキー」を作成
+- 生成されたキーをコピー
 
-- [ ] 音声認識（Whisper統合）
-- [ ] 感情分析（テキストベース）
-- [ ] 複数動画比較機能
-- [ ] リアルタイム分析
-- [ ] データベース統合
-- [ ] ユーザー認証
+### 4. フロントエンドで設定
+- ブラウザで `index.html` を開く
+- 「YouTube API Key設定」セクションでキーを入力
+- 「APIキーを保存」をクリック
+
+## 📊 分析機能
+
+### 🎵 基本音声分析
+- 従来の音声分析機能
+- 盛り上がりポイントの特定
+- 視覚化チャートの生成
+
+### 🎵 正確な音声分析
+- 正確なdB測定
+- 詳細な音量分析
+- 精密な盛り上がりポイント検出
+
+### 📊 エンゲージメント分析
+- いいね・コメント・視聴回数分析
+- エンゲージメント率の計算
+- ホットタイムスタンプの抽出
+
+### 🚀 包括的分析
+- 音声 + エンゲージメント統合分析
+- 包括的スコアの計算
+- 多角的な盛り上がりポイント特定
+
+## 🔧 APIエンドポイント
+
+### 基本分析
+- `POST /analyze-with-visualization` - 基本音声分析
+
+### 改善された分析
+- `POST /analyze-audio-accurate` - 正確な音声分析
+- `POST /analyze-engagement` - エンゲージメント分析
+- `POST /analyze-comprehensive` - 包括的分析
+
+### ユーティリティ
+- `GET /health` - ヘルスチェック
+- `GET /api-info` - API情報
+
+## 🧪 テスト
+
+### テストスクリプトの実行
+```bash
+cd backend
+python test_enhanced_analysis.py
+```
+
+### 手動テスト
+1. 短い動画（5分以下）でテスト
+2. 長い動画（10分以上）でテスト
+3. 人気動画とマイナー動画でテスト
+
+## 🔒 セキュリティ
+
+### APIキーの保護
+- 絶対にGitHubにコミットしない
+- 環境変数で管理
+- APIキーに制限を設定
+
+### 推奨設定
+```bash
+export YOUTUBE_API_KEY="your_api_key_here"
+```
+
+## 📈 パフォーマンス最適化
+
+### 長い動画の処理
+- チャンク分割処理
+- 並列処理
+- サンプルレート最適化
+- 時間制限（最大10分）
+
+### メモリ使用量
+- 効率的な音声処理
+- 一時ファイルの自動削除
+- メモリリーク対策
+
+## 🐛 トラブルシューティング
+
+### よくある問題
+
+#### APIキーが無効
+- APIキーが正しくコピーされているか確認
+- YouTube Data API v3が有効化されているか確認
+
+#### クォータ制限
+- Google Cloud Consoleでクォータ使用量を確認
+- 必要に応じてクォータを増加申請
+
+#### サーバーが起動しない
+- 仮想環境がアクティブになっているか確認
+- ポート8000が使用可能か確認
+
+## 📚 参考資料
+
+- [YouTube Data API v3 ドキュメント](https://developers.google.com/youtube/v3)
+- [Google Cloud Console](https://console.cloud.google.com/)
+- [FastAPI ドキュメント](https://fastapi.tiangolo.com/)
 
 ## 🤝 貢献
 
@@ -207,14 +194,18 @@ Clipers/
 
 ## 📄 ライセンス
 
-MIT License
+このプロジェクトはMITライセンスの下で公開されています。
 
 ## 📞 サポート
 
-問題や質問がある場合は、Issueを作成してください。
+問題が発生した場合は、以下を確認してください：
+
+1. **Google Cloud Console**の設定
+2. **APIキー**の有効性
+3. **ネットワーク接続**
+4. **サーバー**の起動状態
 
 ---
 
-**開発者**: YouTube盛り上がり分析ツール開発チーム  
-**バージョン**: 1.0.0  
-**最終更新**: 2024年 
+**Version**: 2.0.0  
+**Last Updated**: 2024年12月 
