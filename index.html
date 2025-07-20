@@ -1153,6 +1153,17 @@
         if (window.performance && window.performance.navigation.type === window.performance.navigation.TYPE_BACK_FORWARD) {
             window.location.reload();
         }
+        
+        // 強制キャッシュクリア
+        window.addEventListener('load', function() {
+            if (window.location.search.indexOf('v=') === -1) {
+                window.location.search = '?v=' + Date.now();
+            }
+        });
+        
+        // コンソールに現在のAPI_BASE_URLを表示
+        console.log('現在のAPI_BASE_URL:', API_BASE_URL);
+        console.log('キャッシュバスター:', CACHE_BUSTER);
         let currentTaskId = null;
         let statusCheckInterval = null;
         let geminiThoughts = [];
@@ -1228,12 +1239,16 @@
 
         // 分析開始
         async function startAnalysis() {
+            console.log('分析開始関数が呼び出されました');
+            
             const url = document.getElementById('videoUrl').value;
             const youtubeKey = document.getElementById('youtubeApiKey').value;
             const geminiKey = document.getElementById('geminiApiKey').value;
             const analysisType = document.getElementById('analysisType').value;
             const downloadVideo = document.getElementById('downloadVideo').value === 'true';
             const outputFormat = document.getElementById('outputFormat').value;
+
+            console.log('入力値:', { url, youtubeKey: youtubeKey ? '***' : '未設定', geminiKey: geminiKey ? '***' : '未設定', analysisType, downloadVideo, outputFormat });
 
             if (!url || !youtubeKey || !geminiKey) {
                 showStatus('URLとAPIキーを入力してください', 'error');
@@ -1256,13 +1271,18 @@
                 output_format: outputFormat
             };
 
+            console.log('リクエストデータ準備完了:', { ...requestData, youtube_api_key: '***', gemini_api_key: '***' });
+
             try {
                 if (analysisType === 'async') {
+                    console.log('非同期分析を開始します');
                     await startAsyncAnalysis(requestData);
                 } else {
+                    console.log('同期分析を開始します');
                     await startSyncAnalysis(requestData);
                 }
             } catch (error) {
+                console.error('分析エラー:', error);
                 showStatus(`分析エラー: ${error.message}`, 'error');
                 showLoading(false);
             }
@@ -1270,8 +1290,12 @@
 
         // 同期分析
         async function startSyncAnalysis(requestData) {
+            const endpoint = `${API_BASE_URL}/analyze-video`;
+            console.log('同期分析開始 - エンドポイント:', endpoint);
+            
             try {
-                const response = await fetch(`${API_BASE_URL}/analyze-video`, {
+                console.log('APIリクエスト送信中...');
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1279,7 +1303,14 @@
                     body: JSON.stringify(requestData)
                 });
 
+                console.log('レスポンス受信:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const result = await response.json();
+                console.log('分析結果受信:', result);
                 
                 if (result.success) {
                     displayResults(result.data);
@@ -1289,13 +1320,13 @@
                 }
             } catch (error) {
                 console.error('API呼び出しエラー詳細:', error);
-                console.error('リクエストURL:', `${API_BASE_URL}/analyze-video`);
-                console.error('リクエストデータ:', requestData);
+                console.error('リクエストURL:', endpoint);
+                console.error('リクエストデータ:', { ...requestData, youtube_api_key: '***', gemini_api_key: '***' });
                 
                 if (error.name === 'TypeError' && error.message.includes('fetch')) {
                     throw new Error(`サーバーに接続できません。サーバーが起動しているか確認してください。`);
                 } else if (error.message.includes('404')) {
-                    throw new Error(`APIエンドポイントが見つかりません。正しいエンドポイント: /analyze-video または /analyze-video-async。現在のURL: ${API_BASE_URL}/analyze-video`);
+                    throw new Error(`APIエンドポイントが見つかりません。正しいエンドポイント: /analyze-video または /analyze-video-async。現在のURL: ${endpoint}`);
                 } else {
                     throw new Error(`API呼び出しエラー: ${error.message}`);
                 }
@@ -1306,8 +1337,12 @@
 
         // 非同期分析
         async function startAsyncAnalysis(requestData) {
+            const endpoint = `${API_BASE_URL}/analyze-video-async`;
+            console.log('非同期分析開始 - エンドポイント:', endpoint);
+            
             try {
-                const response = await fetch(`${API_BASE_URL}/analyze-video-async`, {
+                console.log('非同期APIリクエスト送信中...');
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1315,7 +1350,14 @@
                     body: JSON.stringify(requestData)
                 });
 
+                console.log('非同期レスポンス受信:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const result = await response.json();
+                console.log('非同期分析結果受信:', result);
                 
                 if (result.task_id) {
                     currentTaskId = result.task_id;
@@ -1330,6 +1372,7 @@
                     throw new Error('タスクIDが取得できませんでした');
                 }
             } catch (error) {
+                console.error('非同期分析エラー:', error);
                 throw new Error(`非同期分析開始エラー: ${error.message}`);
             }
         }
