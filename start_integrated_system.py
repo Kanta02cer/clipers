@@ -73,8 +73,8 @@ def start_backend_server():
         # uvicornを使用してFastAPIアプリケーションを起動
         process = subprocess.Popen([
             sys.executable, "-m", "uvicorn", "integrated_server:app", 
-            "--host", "127.0.0.1", "--port", "8000", "--reload"
-        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            "--host", "127.0.0.1", "--port", "8000", "--reload", "--log-level", "info"
+        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         
         # サーバーが起動するまで待機
         time.sleep(8)
@@ -111,7 +111,7 @@ def start_backend_server():
         else:
             stdout, stderr = process.communicate()
             print("❌ バックエンドサーバーの起動に失敗しました:")
-            print(stderr.decode())
+            print(stderr)
             return False, None
             
     except Exception as e:

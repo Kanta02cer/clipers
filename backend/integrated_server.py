@@ -20,7 +20,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 # 統合分析システム
-from youtube_analyzer_integrated import IntegratedYouTubeAnalyzer, get_analyzer_instance
+from youtube_analyzer_integrated import get_analyzer_instance
 
 # ログ設定
 logging.basicConfig(level=logging.INFO)
@@ -300,49 +300,24 @@ async def run_async_analysis(
             background_tasks[task_id]["current_step"] = "Gemini AI分析中..."
             background_tasks[task_id]["gemini_thoughts"].append("🤖 Gemini AIが動画の質的分析を開始しています...")
         
-        # 3. Gemini AI分析
+        # 3. 統合分析実行
         background_tasks[task_id]["progress"] = 70.0
-        background_tasks[task_id]["gemini_thoughts"].append("🧠 ナラティブ構造、フック効果、感情エンゲージメントを分析中...")
-        gemini_result = analyzer.analyze_with_gemini(video_info, subtitle_text)
-        background_tasks[task_id]["progress"] = 80.0
-        background_tasks[task_id]["current_step"] = "感情分析中..."
-        background_tasks[task_id]["gemini_thoughts"].append("💭 視聴者コメントの感情傾向を分析しています...")
+        background_tasks[task_id]["current_step"] = "統合分析実行中..."
+        background_tasks[task_id]["gemini_thoughts"].append("🤖 Gemini AIによる包括的分析を開始しています...")
         
-        # 4. 感情分析
-        emotion_result = analyzer.analyze_emotions(video_info.get('comments', []))
-        background_tasks[task_id]["progress"] = 85.0
-        background_tasks[task_id]["current_step"] = "切り抜きポイント分析中..."
-        background_tasks[task_id]["gemini_thoughts"].append("✂️ タイムスタンプ付きコメントから切り抜きポイントを特定中...")
+        # 包括的分析実行
+        analysis_result = analyzer.analyze_video_comprehensive(
+            url=url,
+            download_video=download_video
+        )
         
-        # 5. 切り抜きポイント分析
-        video_duration = download_result.get('duration', 0) if download_result else 0
-        clip_result = analyzer.analyze_clip_points(video_info.get('comments', []), video_duration)
-        background_tasks[task_id]["progress"] = 90.0
+        background_tasks[task_id]["progress"] = 95.0
         background_tasks[task_id]["current_step"] = "結果統合中..."
         background_tasks[task_id]["gemini_thoughts"].append("📊 すべての分析結果を統合し、最終レポートを作成中...")
         
-        # 6. コンテンツ品質分析（動画がダウンロードされている場合）
-        content_result = None
-        if download_result and download_result.get('success') and download_result.get('video_path'):
-            background_tasks[task_id]["progress"] = 92.0
-            background_tasks[task_id]["current_step"] = "コンテンツ品質分析中..."
-            background_tasks[task_id]["gemini_thoughts"].append("🎵 動画の音声内容と発言を分析中...")
-            content_result = analyzer.analyze_content_quality(download_result['video_path'], subtitle_text)
-            background_tasks[task_id]["progress"] = 95.0
-            background_tasks[task_id]["current_step"] = "結果統合中..."
-            background_tasks[task_id]["gemini_thoughts"].append("📊 すべての分析結果を統合し、最終レポートを作成中...")
-        
-        # 7. 結果の統合
-        analysis_result = {
-            'video_info': video_info,
-            'download_result': download_result,
-            'gemini_analysis': gemini_result,
-            'emotion_analysis': emotion_result,
-            'clip_analysis': clip_result,
-            'content_analysis': content_result,
-            'analysis_timestamp': datetime.now().isoformat(),
-            'processing_time': (datetime.now() - background_tasks[task_id]["start_time"]).total_seconds()
-        }
+        # 処理時間を追加
+        analysis_result['analysis_timestamp'] = datetime.now().isoformat()
+        analysis_result['processing_time'] = (datetime.now() - background_tasks[task_id]["start_time"]).total_seconds()
         
         # 完了
         background_tasks[task_id]["status"] = "completed"
