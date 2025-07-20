@@ -1189,20 +1189,33 @@
         // サーバー状態確認
         async function checkServerStatus() {
             try {
-                const response = await fetch(`${API_BASE_URL}/health`);
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    timeout: 5000
+                });
+                
                 const data = await response.json();
                 
                 const statusElement = document.getElementById('serverStatus');
                 if (response.ok) {
-                    statusElement.textContent = '🟢 サーバーオンライン';
+                    statusElement.textContent = `🟢 サーバーオンライン (v${data.version})`;
                     statusElement.className = 'server-status server-online';
                 } else {
-                    throw new Error('サーバーエラー');
+                    throw new Error(`サーバーエラー: ${response.status}`);
                 }
             } catch (error) {
+                console.error('サーバー状態確認エラー:', error);
                 const statusElement = document.getElementById('serverStatus');
                 statusElement.textContent = '🔴 サーバーオフライン';
                 statusElement.className = 'server-status server-offline';
+                
+                // エラー詳細を表示
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    showStatus('サーバーに接続できません。バックエンドサーバーが起動しているか確認してください。', 'error');
+                }
             }
         }
 
@@ -1268,7 +1281,14 @@
                     showStatus(`分析失敗: ${result.error}`, 'error');
                 }
             } catch (error) {
-                throw new Error(`API呼び出しエラー: ${error.message}`);
+                console.error('API呼び出しエラー詳細:', error);
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    throw new Error(`サーバーに接続できません。サーバーが起動しているか確認してください。`);
+                } else if (error.message.includes('404')) {
+                    throw new Error(`APIエンドポイントが見つかりません。サーバーの設定を確認してください。`);
+                } else {
+                    throw new Error(`API呼び出しエラー: ${error.message}`);
+                }
             } finally {
                 showLoading(false);
             }
