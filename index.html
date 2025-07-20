@@ -1145,9 +1145,14 @@
     </div>
 
     <script>
-        // キャッシュバスティング
-        const CACHE_BUSTER = '?v=' + Date.now();
+        // 強力なキャッシュバスティング
+        const CACHE_BUSTER = '?v=' + Date.now() + '&cb=' + Math.random();
         const API_BASE_URL = 'http://127.0.0.1:8000';
+        
+        // ページ読み込み時にキャッシュクリア
+        if (window.performance && window.performance.navigation.type === window.performance.navigation.TYPE_BACK_FORWARD) {
+            window.location.reload();
+        }
         let currentTaskId = null;
         let statusCheckInterval = null;
         let geminiThoughts = [];
@@ -1284,10 +1289,13 @@
                 }
             } catch (error) {
                 console.error('API呼び出しエラー詳細:', error);
+                console.error('リクエストURL:', `${API_BASE_URL}/analyze-video`);
+                console.error('リクエストデータ:', requestData);
+                
                 if (error.name === 'TypeError' && error.message.includes('fetch')) {
                     throw new Error(`サーバーに接続できません。サーバーが起動しているか確認してください。`);
                 } else if (error.message.includes('404')) {
-                    throw new Error(`APIエンドポイントが見つかりません。正しいエンドポイント: /analyze-video または /analyze-video-async`);
+                    throw new Error(`APIエンドポイントが見つかりません。正しいエンドポイント: /analyze-video または /analyze-video-async。現在のURL: ${API_BASE_URL}/analyze-video`);
                 } else {
                     throw new Error(`API呼び出しエラー: ${error.message}`);
                 }
