@@ -563,9 +563,10 @@
 
         // ページ読み込み時の初期化
         window.addEventListener('load', function() {
-            document.getElementById('youtubeApiKeyInput').value = localStorage.getItem('youtube_api_key') || '';
-            document.getElementById('geminiApiKeyInput').value = localStorage.getItem('gemini_api_key') || '';
-            
+            const youtubeKey = localStorage.getItem('youtube_api_key') || '';
+            const geminiKey = localStorage.getItem('gemini_api_key') || '';
+            document.getElementById('youtubeApiKeyInput').value = youtubeKey;
+            document.getElementById('geminiApiKeyInput').value = geminiKey;
             // 初期選択
             document.querySelector('.option-card').classList.add('selected');
         });
@@ -579,29 +580,26 @@
         function saveApiKeys() {
             const youtubeApiKey = document.getElementById('youtubeApiKeyInput').value.trim();
             const geminiApiKey = document.getElementById('geminiApiKeyInput').value.trim();
-            
-            if (youtubeApiKey) {
-                localStorage.setItem('youtube_api_key', youtubeApiKey);
-            }
-            if (geminiApiKey) {
-                localStorage.setItem('gemini_api_key', geminiApiKey);
-            }
+            localStorage.setItem('youtube_api_key', youtubeApiKey);
+            localStorage.setItem('gemini_api_key', geminiApiKey);
+            // 入力欄に即時反映
+            document.getElementById('youtubeApiKeyInput').value = youtubeApiKey;
+            document.getElementById('geminiApiKeyInput').value = geminiApiKey;
             alert('APIキーを保存しました。');
         }
 
         // APIキーのテスト関数（改善版）
         async function testApiKeys() {
-            const youtubeApiKey = localStorage.getItem('youtube_api_key') || document.getElementById('youtubeApiKeyInput').value.trim();
-            const geminiApiKey = localStorage.getItem('gemini_api_key') || document.getElementById('geminiApiKeyInput').value.trim();
-            
+            const youtubeApiKey = document.getElementById('youtubeApiKeyInput').value.trim();
+            const geminiApiKey = document.getElementById('geminiApiKeyInput').value.trim();
             let results = '<div class="result-card"><h3>🔍 APIキーテスト結果</h3>';
-            
             // YouTube APIテスト
             if (youtubeApiKey) {
                 try {
                     const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&maxResults=1&key=${youtubeApiKey}`);
                     if (response.ok) {
                         results += '<p style="color: green;">✅ YouTube API: 正常に動作しています</p>';
+                        localStorage.setItem('youtube_api_key', youtubeApiKey);
                     } else {
                         const errorData = await response.json();
                         results += `<p style="color: red;">❌ YouTube API: エラー (${response.status}) - ${errorData.error?.message || '不明なエラー'}</p>`;
@@ -612,60 +610,44 @@
             } else {
                 results += '<p style="color: orange;">⚠️ YouTube API: キーが設定されていません</p>';
             }
-            
-            // Gemini APIテスト（複数エンドポイント）
+            // Gemini APIテスト
             if (geminiApiKey) {
                 const geminiEndpoints = [
                     'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent',
                     'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
                     'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent'
                 ];
-                
                 let geminiSuccess = false;
                 let geminiErrors = [];
-                
                 for (let i = 0; i < geminiEndpoints.length; i++) {
                     try {
-                        // レート制限対策: リクエスト間隔を設定
-                        if (i > 0) {
-                            await new Promise(resolve => setTimeout(resolve, 1000)); // 1秒待機
-                        }
-                        
+                        if (i > 0) await new Promise(resolve => setTimeout(resolve, 1000));
                         const response = await fetch(`${geminiEndpoints[i]}?key=${geminiApiKey}`, {
-                    method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                contents: [{
-                                    parts: [{
-                                        text: "こんにちは。テストメッセージです。"
-                                    }]
-                                }]
+                                contents: [{ parts: [{ text: "こんにちは。テストメッセージです。" }] }]
                             })
                         });
-                        
                         if (response.ok) {
                             const data = await response.json();
                             results += `<p style="color: green;">✅ Gemini API (エンドポイント${i + 1}): 正常に動作しています</p>`;
+                            localStorage.setItem('gemini_api_key', geminiApiKey);
                             geminiSuccess = true;
                             break;
                         } else {
-                    const errorData = await response.json();
+                            const errorData = await response.json();
                             const errorMessage = errorData.error?.message || '不明なエラー';
-                            
-                            // 429エラーの場合は特別なメッセージ
                             if (response.status === 429) {
                                 geminiErrors.push(`エンドポイント${i + 1}: クォータ超過 - しばらく待ってから再試行してください`);
                             } else {
                                 geminiErrors.push(`エンドポイント${i + 1}: ${response.status} - ${errorMessage}`);
                             }
                         }
-            } catch (error) {
+                    } catch (error) {
                         geminiErrors.push(`エンドポイント${i + 1}: 接続エラー - ${error.message}`);
                     }
                 }
-                
                 if (!geminiSuccess) {
                     results += `<p style="color: red;">❌ Gemini API: すべてのエンドポイントでエラー</p>`;
                     results += `<p style="color: orange;">詳細: ${geminiErrors.join(', ')}</p>`;
@@ -682,9 +664,7 @@
             } else {
                 results += '<p style="color: orange;">⚠️ Gemini API: キーが設定されていません</p>';
             }
-            
             results += '</div>';
-            
             document.getElementById('results').innerHTML = results;
             document.getElementById('results').style.display = 'block';
         }
