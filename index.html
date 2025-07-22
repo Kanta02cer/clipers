@@ -409,6 +409,45 @@
             margin: 20px 0;
         }
 
+        .vvp-weight-section {
+            margin: 30px 0 10px 0;
+            background: #f4f8ff;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .vvp-weight-section h3 {
+            margin-bottom: 10px;
+        }
+
+        .vvp-weight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .vvp-weight-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .vvp-weight-item label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .vvp-weight-item input[type="range"] {
+            width: 100%;
+        }
+
+        .vvp-weight-total {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 8px;
+        }
+
     </style>
 </head>
 <body>
@@ -459,6 +498,45 @@
                 <button class="btn btn-success" onclick="saveApiKeys()">APIキーを保存</button>
                 <button class="btn btn-secondary" onclick="testApiKeys()" style="margin-left: 10px;">APIキーをテスト</button>
                 <p style="font-size: 0.8em; margin-top: 10px;">APIキーはブラウザのローカルストレージに保存されます。</p>
+            </div>
+
+            <div class="vvp-weight-section" style="margin: 30px 0 10px 0; background: #f4f8ff; border-radius: 10px; padding: 20px;">
+                <h3 style="margin-bottom: 10px;">⚖️ VVPスコア重み調整</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+                    <div>
+                        <label>物語構造 <span id="weight-narrative-val">18</span>%</label>
+                        <input type="range" min="5" max="30" value="18" id="weight-narrative" oninput="updateVvpWeights()">
+                    </div>
+                    <div>
+                        <label>フック効果 <span id="weight-hook-val">16</span>%</label>
+                        <input type="range" min="5" max="30" value="16" id="weight-hook" oninput="updateVvpWeights()">
+                    </div>
+                    <div>
+                        <label>感情的エンゲージメント <span id="weight-engagement-val">16</span>%</label>
+                        <input type="range" min="5" max="30" value="16" id="weight-engagement" oninput="updateVvpWeights()">
+                    </div>
+                    <div>
+                        <label>技術的品質 <span id="weight-tech-val">10</span>%</label>
+                        <input type="range" min="5" max="20" value="10" id="weight-tech" oninput="updateVvpWeights()">
+                    </div>
+                    <div>
+                        <label>話題性 <span id="weight-topic-val">12</span>%</label>
+                        <input type="range" min="5" max="20" value="12" id="weight-topic" oninput="updateVvpWeights()">
+                    </div>
+                    <div>
+                        <label>コメント多様性 <span id="weight-diversity-val">10</span>%</label>
+                        <input type="range" min="5" max="20" value="10" id="weight-diversity" oninput="updateVvpWeights()">
+                    </div>
+                    <div>
+                        <label>属性適合度 <span id="weight-viewerfit-val">10</span>%</label>
+                        <input type="range" min="5" max="20" value="10" id="weight-viewerfit" oninput="updateVvpWeights()">
+                    </div>
+                    <div>
+                        <label>満足度 <span id="weight-satisfaction-val">8</span>%</label>
+                        <input type="range" min="5" max="20" value="8" id="weight-satisfaction" oninput="updateVvpWeights()">
+                    </div>
+                </div>
+                <div style="font-size:0.9em; color:#666; margin-top:8px;">合計100%になるよう自動調整されます</div>
             </div>
 
             <div class="loading" id="loading">
@@ -809,52 +887,116 @@
             return Math.min(10, Math.max(1, optimizationScore));
         }
 
-        // VVPスコア計算関数（動画内容重視版）
-        function calculateVvpScore(narrative, hook, engagement, tech, videoInfo, comments, engagementScore) {
-            // 動画内容重視の新しい重み付け
-            const weights = {
-                narrative: 0.20,        // 物語構造
-                hook: 0.25,             // フック効果
-                engagement: 0.20,       // 感情的エンゲージメント
-                tech: 0.15,             // 技術的品質
-                topic: 0.10,            // 話題性（新規追加）
-                concentration: 0.05,    // 視聴集中度（新規追加）
-                pacing: 0.05            // テンポ・離脱防止（新規追加）
-            };
-            
-            // 新しいスコアを計算
-            const topicScore = calculateTopicScore(videoInfo, comments);
-            const concentrationScore = calculateViewingConcentrationScore(videoInfo, comments, engagementScore);
-            const pacingScore = calculatePacingScore(videoInfo, comments);
-            const optimizationScore = calculateLongVideoOptimizationScore(videoInfo, comments);
-            
-            const score = Math.round(
-                (narrative * weights.narrative) +
-                (hook * weights.hook) +
-                (engagement * weights.engagement) +
-                (tech * weights.tech) +
-                (topicScore * weights.topic) +
-                (concentrationScore * weights.concentration) +
-                (pacingScore * weights.pacing)
-            );
-            
-            console.log('VVPスコア計算（動画内容重視版）:', {
-                narrative, hook, engagement, tech,
-                topicScore, concentrationScore, pacingScore, optimizationScore,
-                weights, calculatedScore: score
+        // 追加: コメントからユーザー属性を推定する関数
+        function extractUserAttributes(comments) {
+            // 年齢・地域・所属を推定（簡易版）
+            const agePatterns = [/\b(\d{2})歳\b/g, /\b(\d{2})代\b/g, /高校生|大学生|中学生|小学生/];
+            const regionPatterns = [/東京|大阪|北海道|沖縄|名古屋|福岡|京都|神奈川|埼玉|千葉|兵庫|広島|仙台|札幌|横浜/];
+            const affiliationPatterns = [/会社員|学生|主婦|フリーター|自営業|公務員|医師|看護師|エンジニア|教師|研究者/];
+            let ages = [], regions = [], affiliations = [];
+            comments.forEach(comment => {
+                agePatterns.forEach(pat => { const m = comment.match(pat); if (m) ages.push(m[0]); });
+                regionPatterns.forEach(pat => { const m = comment.match(pat); if (m) regions.push(m[0]); });
+                affiliationPatterns.forEach(pat => { const m = comment.match(pat); if (m) affiliations.push(m[0]); });
             });
-            
+            // 最頻値を返す
+            function mode(arr) { if (!arr.length) return null; const freq = {}; arr.forEach(a => freq[a] = (freq[a]||0)+1); return Object.entries(freq).sort((a,b)=>b[1]-a[1])[0][0]; }
+            return {
+                age: mode(ages),
+                region: mode(regions),
+                affiliation: mode(affiliations)
+            };
+        }
+
+        // 追加: コメント多様性スコア
+        function calculateCommentDiversityScore(comments) {
+            if (!comments || comments.length === 0) return 1;
+            const uniqueComments = new Set(comments.map(c => c.slice(0, 30)));
+            const diversity = uniqueComments.size / comments.length;
+            // 0.2~0.8を現実的な分布に正規化
+            return Math.round((5 + 5 * Math.min(0.8, Math.max(0.2, diversity))) * 10) / 10;
+        }
+
+        // 追加: 視聴者属性適合度スコア
+        function calculateViewerFitScore(userAttributes, videoInfo) {
+            // タイトルや説明文に属性ワードが含まれるか
+            let score = 5;
+            if (!userAttributes) return score;
+            const attrWords = [userAttributes.age, userAttributes.region, userAttributes.affiliation].filter(Boolean);
+            const text = (videoInfo.title + ' ' + (videoInfo.description || '')).toLowerCase();
+            attrWords.forEach(word => { if (word && text.includes(word.toLowerCase())) score += 2; });
+            return Math.min(10, Math.max(1, score));
+        }
+
+        // 追加: ユーザー満足度スコア
+        function calculateUserSatisfactionScore(comments) {
+            if (!comments || comments.length === 0) return 5;
+            const positiveWords = ['最高', '素晴らしい', '楽しい', '面白い', '感動', '好き', 'ありがとう', '良かった'];
+            const negativeWords = ['最悪', 'つまらない', '嫌い', '退屈', 'ひどい', '残念', '微妙'];
+            let pos = 0, neg = 0;
+            comments.forEach(c => {
+                positiveWords.forEach(w => { if (c.includes(w)) pos++; });
+                negativeWords.forEach(w => { if (c.includes(w)) neg++; });
+            });
+            const total = pos + neg;
+            if (total === 0) return 5;
+            const ratio = pos / total;
+            // 3~9点の範囲で現実的に分布
+            return Math.round((3 + 6 * ratio) * 10) / 10;
+        }
+
+        // VVPスコア重みのグローバル変数
+        let vvpWeights = {
+            narrative: 18, hook: 16, engagement: 16, tech: 10, topic: 12, diversity: 10, viewerfit: 10, satisfaction: 8
+        };
+
+        function updateVvpWeights() {
+            // 各スライダー値を取得
+            vvpWeights.narrative = parseInt(document.getElementById('weight-narrative').value);
+            vvpWeights.hook = parseInt(document.getElementById('weight-hook').value);
+            vvpWeights.engagement = parseInt(document.getElementById('weight-engagement').value);
+            vvpWeights.tech = parseInt(document.getElementById('weight-tech').value);
+            vvpWeights.topic = parseInt(document.getElementById('weight-topic').value);
+            vvpWeights.diversity = parseInt(document.getElementById('weight-diversity').value);
+            vvpWeights.viewerfit = parseInt(document.getElementById('weight-viewerfit').value);
+            vvpWeights.satisfaction = parseInt(document.getElementById('weight-satisfaction').value);
+            // 合計100%に自動正規化
+            const total = Object.values(vvpWeights).reduce((a,b)=>a+b,0);
+            Object.keys(vvpWeights).forEach(key => {
+                vvpWeights[key] = Math.round(vvpWeights[key] * 100 / total);
+            });
+            // ラベル更新
+            document.getElementById('weight-narrative-val').textContent = vvpWeights.narrative;
+            document.getElementById('weight-hook-val').textContent = vvpWeights.hook;
+            document.getElementById('weight-engagement-val').textContent = vvpWeights.engagement;
+            document.getElementById('weight-tech-val').textContent = vvpWeights.tech;
+            document.getElementById('weight-topic-val').textContent = vvpWeights.topic;
+            document.getElementById('weight-diversity-val').textContent = vvpWeights.diversity;
+            document.getElementById('weight-viewerfit-val').textContent = vvpWeights.viewerfit;
+            document.getElementById('weight-satisfaction-val').textContent = vvpWeights.satisfaction;
+        }
+
+        // VVPスコア計算式でvvpWeightsを使うよう修正
+        function calculateVvpScore(narrative, hook, engagement, tech, videoInfo, comments, engagementScore, userAttributes) {
+            const topicScore = calculateTopicScore(videoInfo, comments);
+            const diversityScore = calculateCommentDiversityScore(comments);
+            const viewerFitScore = calculateViewerFitScore(userAttributes, videoInfo);
+            const satisfactionScore = calculateUserSatisfactionScore(comments);
+            const totalWeight = vvpWeights.narrative + vvpWeights.hook + vvpWeights.engagement + vvpWeights.tech + vvpWeights.topic + vvpWeights.diversity + vvpWeights.viewerfit + vvpWeights.satisfaction;
+            const score = Math.round((
+                narrative * vvpWeights.narrative/100 +
+                hook * vvpWeights.hook/100 +
+                engagement * vvpWeights.engagement/100 +
+                tech * vvpWeights.tech/100 +
+                topicScore * vvpWeights.topic/100 +
+                diversityScore * vvpWeights.diversity/100 +
+                viewerFitScore * vvpWeights.viewerfit/100 +
+                satisfactionScore * vvpWeights.satisfaction/100
+            ) * 10) / 10;
             return {
                 totalScore: score,
                 breakdown: {
-                    narrative: narrative,
-                    hook: hook,
-                    engagement: engagement,
-                    tech: tech,
-                    topic: topicScore,
-                    concentration: concentrationScore,
-                    pacing: pacingScore,
-                    optimization: optimizationScore
+                    narrative, hook, engagement, tech, topic: topicScore, diversity: diversityScore, viewerFit: viewerFitScore, satisfaction: satisfactionScore
                 }
             };
         }
@@ -1147,8 +1289,11 @@
             const clipDetector = new ClipPointDetector();
             const clipAnalysis = clipDetector.generateClipCandidates(videoInfo, comments, topComments);
 
+            // 追加: コメントからユーザー属性を推定する関数
+            const userAttributes = extractUserAttributes(comments);
+
             const prompt = `
-あなたはYouTube動画分析の専門家です。以下の動画情報と計算された盛り上がりスコアを参考に、詳細に分析し、JSON形式で回答してください。
+あなたはYouTube動画分析の専門家です。以下の動画情報と計算された盛り上がりスコア、ユーザー属性情報を参考に、詳細に分析し、JSON形式で回答してください。
 
 ## 動画基本情報
 - タイトル: ${videoInfo.title}
@@ -1161,12 +1306,20 @@
 - 公開日: ${new Date(videoInfo.publishedAt).toLocaleDateString('ja-JP')}
 - タグ: ${videoInfo.tags ? videoInfo.tags.slice(0, 5).join(', ') : 'なし'}
 
+## 推定ユーザー属性
+- 年齢層: ${userAttributes.age || '不明'}
+- 地域: ${userAttributes.region || '不明'}
+- 所属: ${userAttributes.affiliation || '不明'}
+
 ## 計算された盛り上がりスコア（学習データ）
 - 総合盛り上がりスコア: ${engagementScore.totalScore}/10
 - コメントスコア: ${engagementScore.breakdown.commentScore}/10
 - いいねスコア: ${engagementScore.breakdown.likeScore}/10
 - 視聴者維持率スコア: ${engagementScore.breakdown.retentionScore}/10
 - コンバージョンスコア: ${engagementScore.breakdown.conversionScore}/10
+- コメント多様性スコア: ${calculateCommentDiversityScore(comments)}/10
+- 視聴者属性適合度: ${calculateViewerFitScore(userAttributes, videoInfo)}/10
+- ユーザー満足度: ${calculateUserSatisfactionScore(comments)}/10
 
 ## 検出された切り抜き候補
 ${clipAnalysis.candidates.map((candidate, index) => 
@@ -1177,14 +1330,17 @@ ${clipAnalysis.candidates.map((candidate, index) =>
 ${topComments.slice(0, 10).map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
 ## 分析要求
-上記の計算された盛り上がりスコアを参考に、以下の項目を1-10点で評価し、理由も含めてJSON形式で回答してください：
+上記の計算された盛り上がりスコアとユーザー属性情報を参考に、以下の項目を1-10点で評価し、理由も含めてJSON形式で回答してください：
 
 1. narrative_structure: 物語構造の評価（起承転結、ストーリーテリング）
 2. hook_effectiveness: フックの効果（冒頭の引き込み力、継続視聴率）
 3. emotional_engagement: 感情的エンゲージメント（視聴者の感情移入度）
 4. technical_quality: 技術的品質（映像・音声・編集技術）
-5. semantic_hotspots: 重要な時間帯（配列形式、時間と理由）
-6. summary: 戦略的提案（改善点、成功要因、今後の方向性）
+5. viewer_fit: 視聴者属性適合度（ユーザー属性に合った内容か）
+6. comment_diversity: コメント多様性（意見・感想の幅広さ）
+7. user_satisfaction: ユーザー満足度（コメントや評価から推定）
+8. semantic_hotspots: 重要な時間帯（配列形式、時間と理由）
+9. summary: 戦略的提案（改善点、成功要因、今後の方向性）
 
 ## 回答形式
 以下のJSON形式で回答してください：
@@ -1193,6 +1349,9 @@ ${topComments.slice(0, 10).map((c, i) => `${i + 1}. ${c}`).join('\n')}
   "hook_effectiveness": {"score": 7, "reason": "理由を記載"},
   "emotional_engagement": {"score": 9, "reason": "理由を記載"},
   "technical_quality": {"score": 6, "reason": "理由を記載"},
+  "viewer_fit": {"score": 7, "reason": "理由を記載"},
+  "comment_diversity": {"score": 8, "reason": "理由を記載"},
+  "user_satisfaction": {"score": 7, "reason": "理由を記載"},
   "semantic_hotspots": [
     {"time": "2:30", "reason": "重要なポイントの理由"},
     {"time": "5:45", "reason": "重要なポイントの理由"}
@@ -1500,6 +1659,23 @@ ${topComments.slice(0, 10).map((c, i) => `${i + 1}. ${c}`).join('\n')}
             }
         }
 
+        // ユーザー属性推定API呼び出し関数
+        async function fetchUserAttributes(comments) {
+            try {
+                const response = await fetch('http://localhost:8000/analyze-user-attributes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ comments })
+                });
+                if (!response.ok) throw new Error('属性推定APIエラー');
+                const data = await response.json();
+                return data.user_attributes;
+            } catch (e) {
+                console.warn('属性推定API失敗:', e);
+                return null;
+            }
+        }
+
         async function analyzeVideo() {
             const videoUrl = document.getElementById('videoUrl').value.trim();
             const youtubeApiKey = localStorage.getItem('youtube_api_key') || '';
@@ -1591,7 +1767,7 @@ ${topComments.slice(0, 10).map((c, i) => `${i + 1}. ${c}`).join('\n')}
                 const clipAnalysis = clipDetector.generateClipCandidates(result.videoInfo, result.comments, result.topComments);
                 
                 // 新しいVVPスコア計算（動画内容重視版）
-                const vvpResult = calculateVvpScore(narrative, hook, engagement, tech, result.videoInfo, result.comments, engagementScore);
+                const vvpResult = calculateVvpScore(narrative, hook, engagement, tech, result.videoInfo, result.comments, engagementScore, extractUserAttributes(result.comments));
                 result.vvpScore = vvpResult.totalScore;
                 result.vvpBreakdown = vvpResult.breakdown;
                 
@@ -1614,6 +1790,10 @@ ${topComments.slice(0, 10).map((c, i) => `${i + 1}. ${c}`).join('\n')}
                 steps[3].status = 'completed';
                 displayAnalysisSteps(steps);
                 }
+
+                // 分析開始時に属性推定APIを呼び出し、属性をグローバル変数に保存
+                let lastUserAttributes = null;
+                lastUserAttributes = await fetchUserAttributes(youtubeData.comments);
 
                 displayResults(result, selectedAnalysis);
 
@@ -1744,196 +1924,3 @@ ${topComments.slice(0, 10).map((c, i) => `${i + 1}. ${c}`).join('\n')}
             // 盛り上がりスコア表示を追加
             if (engagementScore) {
                 html += `
-                <div class="result-card">
-                    <h3>📊 盛り上がりスコア分析（学習データ）</h3>
-                    <div class="gemini-grid">
-                        <div class="gemini-item">
-                            <h4>🔥 総合盛り上がりスコア</h4>
-                            <p class="score">${engagementScore.totalScore}/10</p>
-                            <p>計算式: コメント(35%) + いいね(25%) + 維持率(25%) + コンバージョン(15%)</p>
-                        </div>
-                        <div class="gemini-item">
-                            <h4>💬 コメントスコア</h4>
-                            <p class="score">${engagementScore.breakdown.commentScore}/10</p>
-                            <p>感情分析 + コメント密度</p>
-                        </div>
-                        <div class="gemini-item">
-                            <h4>👍 いいねスコア</h4>
-                            <p class="score">${engagementScore.breakdown.likeScore}/10</p>
-                            <p>いいね率の計算</p>
-                        </div>
-                        <div class="gemini-item">
-                            <h4>📈 視聴者維持率スコア</h4>
-                            <p class="score">${engagementScore.breakdown.retentionScore}/10</p>
-                            <p>時間分布分析による推定</p>
-                        </div>
-                    </div>
-                </div>
-                `;
-            }
-
-            if (geminiAnalysis.semantic_hotspots && geminiAnalysis.semantic_hotspots.length > 0) {
-                html += `
-                <div class="hot-timestamps">
-                    <h4>🔥 セマンティック・ホットスポット (AI分析)</h4>
-                    ${geminiAnalysis.semantic_hotspots.map((spot, index) => `
-                        <div class="timestamp-item">
-                            <strong>${index + 1}. ${spot.time || 'N/A'}</strong><br>
-                            💡 理由: ${spot.reason || ''}
-                        </div>
-                    `).join('')}
-                </div>
-                `;
-            }
-
-            html += `
-                <div class="result-card gemini-result-card">
-                    <h3>🌟 総合VVPスコア（動画内容重視版）</h3>
-                    <div style="display: flex; align-items: center; gap: 30px;">
-                        <div style="font-size: 3em; font-weight: bold; color: #43e97b;">${vvpScore}</div>
-                        <div style="flex:1;">
-                            <div style="background: #e3fcec; border-radius: 10px; height: 24px; width: 100%; overflow: hidden;">
-                                <div style="background: linear-gradient(90deg, #43e97b, #38f9d7); height: 100%; width: ${vvpScore !== 'N/A' ? vvpScore : 0}%; transition: width 0.8s;"></div>
-                            </div>
-                            <div style="font-size: 0.9em; color: #666; margin-top: 5px;">100点満点中</div>
-                        </div>
-                    </div>
-                    
-                    ${vvpBreakdown ? `
-                    <div style="margin-top: 20px;">
-                        <h4>📊 VVPスコア詳細内訳</h4>
-                        <div class="gemini-grid">
-                            <div class="gemini-item">
-                                <h5>📖 物語構造</h5>
-                                <p class="score">${vvpBreakdown.narrative}/10</p>
-                                <p>重み: 20%</p>
-                            </div>
-                            <div class="gemini-item">
-                                <h5>🎯 フック効果</h5>
-                                <p class="score">${vvpBreakdown.hook}/10</p>
-                                <p>重み: 25%</p>
-                            </div>
-                            <div class="gemini-item">
-                                <h5>❤️ 感情的エンゲージメント</h5>
-                                <p class="score">${vvpBreakdown.engagement}/10</p>
-                                <p>重み: 20%</p>
-                            </div>
-                            <div class="gemini-item">
-                                <h5>🔧 技術的品質</h5>
-                                <p class="score">${vvpBreakdown.tech}/10</p>
-                                <p>重み: 15%</p>
-                            </div>
-                            <div class="gemini-item">
-                                <h5>🔥 話題性</h5>
-                                <p class="score">${vvpBreakdown.topic}/10</p>
-                                <p>重み: 10%</p>
-                            </div>
-                            <div class="gemini-item">
-                                <h5>👀 視聴集中度</h5>
-                                <p class="score">${vvpBreakdown.concentration}/10</p>
-                                <p>重み: 5%</p>
-                            </div>
-                            <div class="gemini-item">
-                                <h5>⚡ テンポ・離脱防止</h5>
-                                <p class="score">${vvpBreakdown.pacing}/10</p>
-                                <p>重み: 5%</p>
-                            </div>
-                        </div>
-                    </div>
-                    ` : ''}
-                </div>
-            `;
-
-            // 切り抜き候補表示を追加
-            if (clipCandidates && clipCandidates.length > 0) {
-                 html += `
-                    <div class="result-card">
-                    <h3>🎬 切り抜き候補（盛り上がりスコア分析）</h3>
-                    <div class="gemini-grid">
-                        ${clipCandidates.map((candidate, index) => `
-                            <div class="gemini-item">
-                                <h4>🎯 候補${index + 1}: ${candidate.time}</h4>
-                                <p class="score">${candidate.score}/10</p>
-                                <p><strong>信頼度:</strong> ${candidate.confidence}%</p>
-                                <p><strong>理由:</strong> ${candidate.reason}</p>
-                                <p><strong>推奨長:</strong> ${candidate.duration}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                `;
-            }
-
-            if (goldenClip && (goldenClip.time || goldenClip.start)) {
-                html += `
-                <div class="result-card">
-                    <h3>🏅 Golden Clip（最重要区間）</h3>
-                    <p><strong>時間:</strong> ${goldenClip.time || (goldenClip.start + '〜' + (goldenClip.end || ''))}</p>
-                    <p><strong>内容:</strong> ${goldenClip.reason || goldenClip.desc || ''}</p>
-                    ${goldenClip.score ? `<p><strong>盛り上がりスコア:</strong> ${goldenClip.score}/10</p>` : ''}
-                    ${goldenClip.confidence ? `<p><strong>信頼度:</strong> ${goldenClip.confidence}%</p>` : ''}
-                </div>
-                `;
-            }
-
-            if (executiveSummary) {
-                html += `
-                <div class="result-card">
-                    <h3>📝 Executive Summary（AI戦略要約）</h3>
-                    <p>${executiveSummary}</p>
-                </div>
-                `;
-            }
-
-            return html;
-        }
-
-        function displayEngagementAnalysis(result) {
-            const videoInfo = result.videoInfo;
-            
-            return `
-                <div class="result-card">
-                    <h3>📊 エンゲージメント分析結果</h3>
-                        <div class="stats-grid">
-                             <div class="stat-item">
-                            <div class="stat-value">${videoInfo.viewCount.toLocaleString()}</div>
-                                <div class="stat-label">視聴回数</div>
-                            </div>
-                            <div class="stat-item">
-                            <div class="stat-value">${videoInfo.likeCount.toLocaleString()}</div>
-                                <div class="stat-label">いいね数</div>
-                            </div>
-                             <div class="stat-item">
-                            <div class="stat-value">${videoInfo.commentCount.toLocaleString()}</div>
-                                <div class="stat-label">コメント数</div>
-                            </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${((videoInfo.likeCount / videoInfo.viewCount) * 100).toFixed(2)}%</div>
-                            <div class="stat-label">いいね率</div>
-                        </div>
-                    </div>
-                    <h4>📝 動画タイトル</h4>
-                    <p>${videoInfo.title}</p>
-                    <h4>📅 公開日</h4>
-                    <p>${new Date(videoInfo.publishedAt).toLocaleDateString('ja-JP')}</p>
-                    </div>
-                 `;
-            }
-
-        function displayBasicAnalysis(result) {
-            return `
-                <div class="result-card">
-                    <h3>🔍 基本情報</h3>
-                    <p>YouTube APIキーを設定して詳細な分析を実行してください。</p>
-                    <p>現在の分析モード: ${selectedAnalysis}</p>
-                </div>
-            `;
-        }
-
-        // Enterキーで分析開始
-        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') analyzeVideo();
-        });
-    </script>
-</body>
-</html> 

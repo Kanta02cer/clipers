@@ -6,7 +6,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
-from fastapi import FastAPI, HTTPException # type: ignore
+from fastapi import FastAPI, HTTPException, Body # type: ignore
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
 from pydantic import BaseModel # type: ignore
 import yt_dlp # type: ignore
@@ -20,6 +20,7 @@ from gemini_analyzer import GeminiAnalyzer # GeminiAnalyzerをインポート
 from datetime import datetime
 import re
 from config import get_youtube_api_key, get_gemini_api_key
+from user_attribute_analyzer import UserAttributeAnalyzer
 
 app = FastAPI(title="YouTube盛り上がり分析ツール (Enhanced)", version="2.1.0-gemini")
 
@@ -606,6 +607,15 @@ async def evaluate_video_framework(request: AudioAnalysisRequest):
             
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"動画評価に失敗しました: {str(e)}")
+
+@app.post("/analyze-user-attributes")
+async def analyze_user_attributes(comments: List[str] = Body(..., embed=True)):
+    """
+    コメントリストからユーザー属性（年齢・地域・所属・性別）を推定して返すAPI
+    """
+    analyzer = UserAttributeAnalyzer()
+    result = analyzer.analyze(comments)
+    return {"user_attributes": result}
 
 @app.get("/api-info")
 async def api_info():
